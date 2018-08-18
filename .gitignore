@@ -2,3 +2,4 @@ sqlgen
 *.sqlite
 *.txt
 _docs
+*.idea*
