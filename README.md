@@ -5,7 +5,7 @@
 Install or upgrade with this command:
 
 ```
-go get -u github.com/drone/sqlgen
+go get -u github.com/linchunquan/sqlgen
 ```
 
 ### Usage
