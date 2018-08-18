@@ -103,6 +103,10 @@ func Load(tree *parse.Node) *Table {
 
 			parts = append(parts, part.Name)
 		}
+
+		//fix_here
+		parts[0]="f"
+
 		field.Name = strings.Join(parts, "_")
 		field.Name = inflections.Underscore(field.Name)
 

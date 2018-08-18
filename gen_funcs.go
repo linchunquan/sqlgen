@@ -48,7 +48,7 @@ func writeImports(w io.Writer, tree *parse.Node, pkgs ...string) {
 	fmt.Fprintln(w, ")")
 }
 
-func writeSliceFunc(w io.Writer, tree *parse.Node) {
+func writeSliceFunc(srcPkgNameInShort string, w io.Writer, tree *parse.Node) {
 
 	var buf1, buf2, buf3 bytes.Buffer
 
@@ -115,14 +115,14 @@ func writeSliceFunc(w io.Writer, tree *parse.Node) {
 	fmt.Fprintf(w,
 		sSliceRow,
 		tree.Type,
-		tree.Type,
+		srcPkgNameInShort+"."+tree.Type,
 		buf1.String(),
 		buf2.String(),
 		buf3.String(),
 	)
 }
 
-func writeRowFunc(w io.Writer, tree *parse.Node) {
+func writeRowFunc(srcPkgNameInShort string, w io.Writer, tree *parse.Node) {
 
 	var buf1, buf2, buf3 bytes.Buffer
 
@@ -163,19 +163,20 @@ func writeRowFunc(w io.Writer, tree *parse.Node) {
 		parent = node.Parent
 		i++
 	}
-
+	//fmt.Printf("tree.Type:%v",tree.Type)
 	fmt.Fprintf(w,
 		sScanRow,
+		//fmt.Sprintf("%s.%s", tree.Type),
 		tree.Type,
-		tree.Type,
+		srcPkgNameInShort+"."+tree.Type,
 		buf1.String(),
 		buf2.String(),
-		tree.Type,
+		srcPkgNameInShort+"."+tree.Type,
 		buf3.String(),
 	)
 }
 
-func writeRowsFunc(w io.Writer, tree *parse.Node) {
+func writeRowsFunc(srcPkgNameInShort string, w io.Writer, tree *parse.Node) {
 	var buf1, buf2, buf3 bytes.Buffer
 
 	var i int
@@ -219,32 +220,32 @@ func writeRowsFunc(w io.Writer, tree *parse.Node) {
 	fmt.Fprintf(w,
 		sScanRows,
 		inflections.Pluralize(tree.Type),
-		tree.Type,
-		tree.Type,
+		srcPkgNameInShort+"."+tree.Type,
+		srcPkgNameInShort+"."+tree.Type,
 		buf1.String(),
 		buf2.String(),
-		tree.Type,
+		srcPkgNameInShort+"."+tree.Type,
 		buf3.String(),
 	)
 }
 
-func writeSelectRow(w io.Writer, tree *parse.Node) {
-	fmt.Fprintf(w, sSelectRow, tree.Type, tree.Type, tree.Type)
+func writeSelectRow(srcPkgNameInShort string, w io.Writer, tree *parse.Node) {
+	fmt.Fprintf(w, sSelectRow, tree.Type, srcPkgNameInShort+"."+tree.Type, tree.Type)
 }
 
-func writeSelectRows(w io.Writer, tree *parse.Node) {
+func writeSelectRows(srcPkgNameInShort string,w io.Writer, tree *parse.Node) {
 	plural := inflections.Pluralize(tree.Type)
-	fmt.Fprintf(w, sSelectRows, plural, tree.Type, plural)
+	fmt.Fprintf(w, sSelectRows, plural, srcPkgNameInShort+"."+tree.Type, plural)
 }
 
-func writeInsertFunc(w io.Writer, tree *parse.Node) {
+func writeInsertFunc(srcPkgNameInShort string, w io.Writer, tree *parse.Node) {
 	// TODO this assumes I'm using the ID field.
 	// we should not make that assumption
-	fmt.Fprintf(w, sInsert, tree.Type, tree.Type, tree.Type)
+	fmt.Fprintf(w, sInsert, tree.Type, srcPkgNameInShort+"."+tree.Type, tree.Type)
 }
 
-func writeUpdateFunc(w io.Writer, tree *parse.Node) {
-	fmt.Fprintf(w, sUpdate, tree.Type, tree.Type, tree.Type)
+func writeUpdateFunc(srcPkgNameInShort string, w io.Writer, tree *parse.Node) {
+	fmt.Fprintf(w, sUpdate, tree.Type, srcPkgNameInShort+"."+tree.Type, tree.Type)
 }
 
 // join is a helper function that joins nodes

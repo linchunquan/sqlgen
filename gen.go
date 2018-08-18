@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
-
+	"strings"
 	"github.com/drone/sqlgen/parse"
 	"github.com/drone/sqlgen/schema"
 )
@@ -15,11 +15,13 @@ var (
 	input      = flag.String("file", "", "input file name; required")
 	output     = flag.String("o", "", "output file name; required")
 	pkgName    = flag.String("pkg", "main", "output package name; required")
+	srcPkgName = flag.String("srcPkg", "main", "input package name; required")
 	typeName   = flag.String("type", "", "type to generate; required")
 	database   = flag.String("db", "sqlite", "sql dialect; required")
 	genSchema  = flag.Bool("schema", true, "generate sql schema and queries")
 	genFuncs   = flag.Bool("funcs", true, "generate sql helper functions")
 	extraFuncs = flag.Bool("extras", true, "generate extra sql helper functions")
+	needImport = flag.Bool( "needImport", true, "need to generate import statement")
 )
 
 func main() {
@@ -42,21 +44,25 @@ func main() {
 	// load the Tree into a schema Object
 	table := schema.Load(tree)
 	dialect := schema.New(schema.Dialects[*database])
+	strs:=strings.Split(*srcPkgName, "/")
+	srcPkgNameInShort:=strs[len(strs)-1]
 
 	var buf bytes.Buffer
 
 	if *genFuncs {
-		writePackage(&buf, *pkgName)
-		writeImports(&buf, tree, "database/sql")
-		writeRowFunc(&buf, tree)
-		writeRowsFunc(&buf, tree)
-		writeSliceFunc(&buf, tree)
+		if *needImport{
+			writePackage(&buf, *pkgName)
+			writeImports(&buf, tree, "database/sql", *srcPkgName)
+		}
+		writeRowFunc(srcPkgNameInShort, &buf, tree)
+		writeRowsFunc(srcPkgNameInShort, &buf, tree)
+		writeSliceFunc(srcPkgNameInShort, &buf, tree)
 
 		if *extraFuncs {
-			writeSelectRow(&buf, tree)
-			writeSelectRows(&buf, tree)
-			writeInsertFunc(&buf, tree)
-			writeUpdateFunc(&buf, tree)
+			writeSelectRow(srcPkgNameInShort, &buf, tree)
+			writeSelectRows(srcPkgNameInShort, &buf, tree)
+			writeInsertFunc(srcPkgNameInShort, &buf, tree)
+			writeUpdateFunc(srcPkgNameInShort, &buf, tree)
 		}
 	} else {
 		writePackage(&buf, *pkgName)
