@@ -7,8 +7,9 @@ import (
 	"io"
 	"os"
 	"strings"
-	"github.com/drone/sqlgen/parse"
-	"github.com/drone/sqlgen/schema"
+	"github.com/linchunquan/sqlgen/parse"
+	"github.com/linchunquan/sqlgen/schema"
+	"log"
 )
 
 var (
@@ -23,6 +24,10 @@ var (
 	extraFuncs = flag.Bool("extras", true, "generate extra sql helper functions")
 	needImport = flag.Bool( "needImport", true, "need to generate import statement")
 )
+
+func init() {
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
+}
 
 func main() {
 	flag.Parse()

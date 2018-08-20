@@ -4,7 +4,8 @@ import (
 	"strings"
 
 	"github.com/acsellers/inflections"
-	"github.com/drone/sqlgen/parse"
+	"github.com/linchunquan/sqlgen/parse"
+	"log"
 )
 
 func Load(tree *parse.Node) *Table {
@@ -38,6 +39,24 @@ func Load(tree *parse.Node) *Table {
 		} else {
 			field.Type = BLOB
 		}
+
+		// get the full path name
+		path := node.Path()
+		var parts []string
+		for _, part := range path {
+			if part.Tags != nil && part.Tags.Name != "" {
+				parts = append(parts, part.Tags.Name)
+				continue
+			}
+
+			parts = append(parts, part.Name)
+		}
+
+		//fix_here, simplify the field name
+		parts[0]="f"
+
+		field.Name = strings.Join(parts, "_")
+		field.Name = inflections.Underscore(field.Name)
 
 		// substitute tag variables
 		if node.Tags != nil {
@@ -90,25 +109,32 @@ func Load(tree *parse.Node) *Table {
 					field.Type = t
 				}
 			}
-		}
 
-		// get the full path name
-		path := node.Path()
-		var parts []string
-		for _, part := range path {
-			if part.Tags != nil && part.Tags.Name != "" {
-				parts = append(parts, part.Tags.Name)
-				continue
+			if node.Tags.Foreign != "" {
+				strs := strings.Split(node.Tags.Foreign, "@")
+				if len(strs)==2{
+					foreign := new(Foreign)
+					tableName := strings.TrimSpace(strs[1])
+					if len(tableName)>0{
+						foreign.Name = "ForeignKey_"+table.Name+"_"+node.Name
+						log.Printf("foreign table name:%s",foreign.Name)
+						foreign.FromColumns = []string{field.Name}
+						foreign.ToTable = tableName
+						columns := strings.Split(strs[0],"|")
+						for _, column := range columns{
+							c := strings.TrimSpace(column)
+							if len(c)>0 {
+								foreign.ToColumns = append(foreign.ToColumns, "f_"+c)
+							}
+						}
+						if len(foreign.ToColumns)>0 {
+							log.Printf("foreign:%+v", foreign)
+							table.Foreigns = append(table.Foreigns, foreign)
+						}
+					}
+				}
 			}
-
-			parts = append(parts, part.Name)
 		}
-
-		//fix_here, simplfy 
-		parts[0]="f"
-
-		field.Name = strings.Join(parts, "_")
-		field.Name = inflections.Underscore(field.Name)
 
 		table.Fields = append(table.Fields, field)
 	}

@@ -37,6 +37,10 @@ var tagTests = []struct {
 		`sql:"unique: fake_unique_index"`,
 		&Tag{Unique: "fake_unique_index"},
 	},
+	{
+		`sql:"fk: id@users"`,
+		&Tag{Foreign: "id@users"},
+	},
 }
 
 func TestParseTag(t *testing.T) {

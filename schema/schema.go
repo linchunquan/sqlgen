@@ -21,6 +21,7 @@ type Table struct {
 	Fields  []*Field
 	Index   []*Index
 	Primary []*Field
+	Foreigns[]*Foreign
 }
 
 type Field struct {
@@ -36,4 +37,11 @@ type Index struct {
 	Unique bool
 
 	Fields []*Field
+}
+
+type Foreign struct{
+	Name      string
+	FromColumns []string
+	ToTable     string
+	ToColumns   []string
 }

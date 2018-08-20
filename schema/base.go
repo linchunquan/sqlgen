@@ -6,6 +6,7 @@ import (
 	"io"
 	"strings"
 	"text/tabwriter"
+	"log"
 )
 
 type base struct {
@@ -34,11 +35,20 @@ func (b *base) Table(t *Table) string {
 
 // Index returns a SQL statement to create the index.
 func (b *base) Index(table *Table, index *Index) string {
+	log.Printf("create index:%+v", index)
 	var obj = "INDEX"
 	if index.Unique {
 		obj = "UNIQUE INDEX"
 	}
 	return fmt.Sprintf("CREATE %s IF NOT EXISTS %s ON %s (%s)", obj, index.Name, table.Name, b.columns(index.Fields, true, false, false))
+}
+
+// Foreign returns a SQL statement to add foreign key.
+func (b *base)Foreign(table *Table, foreign *Foreign) string {
+	log.Printf("create foreign key:%+v", foreign)
+	fromColumns := strings.Join(foreign.FromColumns, ",")
+	toColumns := strings.Join(foreign.ToColumns, ",")
+	return fmt.Sprintf("ALTER TABLE %s ADD FOREIGN KEY (%s) REFERENCES %s (%s)", table.Name, fromColumns, foreign.ToTable, toColumns)
 }
 
 func (b *base) Insert(t *Table) string {

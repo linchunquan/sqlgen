@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/acsellers/inflections"
-	"github.com/drone/sqlgen/parse"
+	"github.com/linchunquan/sqlgen/parse"
 )
 
 func writeImports(w io.Writer, tree *parse.Node, pkgs ...string) {

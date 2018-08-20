@@ -6,19 +6,18 @@ import (
 	"strings"
 
 	"bitbucket.org/pkg/inflect"
-	"github.com/drone/sqlgen/schema"
-	"log"
+	"github.com/linchunquan/sqlgen/schema"
 )
 
 // writeSchema writes SQL statements to CREATE, INSERT,
 // UPDATE and DELETE values from Table t.
 func writeSchema(w io.Writer, d schema.Dialect, t *schema.Table) {
 
-	log.Printf("table:%+v", t)
+	/*log.Printf("table:%+v", t)
 	for _,field:=range t.Fields{
 		log.Printf("---->field:%v", field.Name)
 	}
-
+*/
 	writeConst(w,
 		d.Table(t),
 		"create", inflect.Singularize(t.Name), "stmt",
@@ -97,6 +96,13 @@ func writeSchema(w io.Writer, d schema.Dialect, t *schema.Table) {
 				"delete", ix.Name, "stmt",
 			)
 		}
+	}
+
+	for _, fk := range t.Foreigns{
+		writeConst(w,
+			d.Foreign(t, fk),
+			"create", inflect.Singularize(fk.Name), "stmt",
+		)
 	}
 }
 

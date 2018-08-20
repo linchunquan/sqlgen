@@ -25,6 +25,7 @@ type Tag struct {
 	Size    int    `yaml:"size"`
 	Skip    bool   `yaml:"skip"`
 	Encode  string `yaml:"encode"`
+	Foreign string `yaml:"fk"`
 }
 
 // parseTag parses a tag string from the struct

@@ -15,6 +15,7 @@ var Dialects = map[string]int{
 type Dialect interface {
 	Table(*Table) string
 	Index(*Table, *Index) string
+	Foreign(*Table, *Foreign) string
 	Column(*Field) string
 	Insert(*Table) string
 	Update(*Table, []*Field) string
