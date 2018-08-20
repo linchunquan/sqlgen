@@ -48,7 +48,7 @@ func (b *base)Foreign(table *Table, foreign *Foreign) string {
 	log.Printf("create foreign key:%+v", foreign)
 	fromColumns := strings.Join(foreign.FromColumns, ",")
 	toColumns := strings.Join(foreign.ToColumns, ",")
-	return fmt.Sprintf("ALTER TABLE %s ADD FOREIGN KEY (%s) REFERENCES %s (%s)", table.Name, fromColumns, foreign.ToTable, toColumns)
+	return fmt.Sprintf("ALTER TABLE %s ADD FOREIGN KEY (%s) REFERENCES %s (%s);", table.Name, fromColumns, foreign.ToTable, toColumns)
 }
 
 func (b *base) Insert(t *Table) string {

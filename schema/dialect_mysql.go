@@ -2,6 +2,7 @@ package schema
 
 import (
 	"fmt"
+	"log"
 )
 
 type mysql struct {
@@ -44,4 +45,14 @@ func (d *mysql) Token(v int) (_ string) {
 	default:
 		return
 	}
+}
+
+// Index returns a SQL statement to create the index.
+func (b *mysql) Index(table *Table, index *Index) string {
+	log.Printf("create index:%+v", index)
+	var obj = "INDEX"
+	if index.Unique {
+		obj = "UNIQUE INDEX"
+	}
+	return fmt.Sprintf("CREATE %s %s ON %s (%s);", obj, index.Name, table.Name, b.columns(index.Fields, true, false, false))
 }

@@ -15,6 +15,7 @@ import (
 var (
 	input      = flag.String("file", "", "input file name; required")
 	output     = flag.String("o", "", "output file name; required")
+	outputSql  = flag.String("osf", "", "output sql file path;")
 	pkgName    = flag.String("pkg", "main", "output package name; required")
 	srcPkgName = flag.String("srcPkg", "main", "input package name; required")
 	typeName   = flag.String("type", "", "type to generate; required")
@@ -75,7 +76,7 @@ func main() {
 
 	// write the sql functions
 	if *genSchema {
-		writeSchema(&buf, dialect, table)
+		writeSchema(&buf, dialect, table, *outputSql)
 	}
 
 	// formats the generated file using gofmt
