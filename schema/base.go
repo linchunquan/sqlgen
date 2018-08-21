@@ -87,6 +87,10 @@ func (b *base) SelectCount(t *Table, fields []*Field) string {
 	return fmt.Sprintf("SELECT count(1)\nFROM %s %s", t.Name, b.clause(fields, 0))
 }
 
+func (b *base) SelectByUniqueIndex(t *Table, fields []*Field, index *Index) string{
+	return ""
+}
+
 // Param returns the parameters symbol used in prepared
 // sql statements.
 func (b *base) Param(i int) string {

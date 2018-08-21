@@ -1,5 +1,8 @@
 package schema
 
+import(
+	"github.com/linchunquan/sqlgen/parse"
+)
 // List of basic types
 const (
 	INTEGER int = iota
@@ -25,6 +28,7 @@ type Table struct {
 }
 
 type Field struct {
+	Node    *parse.Node
 	Name    string
 	Type    int
 	Primary bool

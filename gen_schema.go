@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"os"
 	"bytes"
+	"log"
 )
 
 func isPathExist(_path string) bool {
@@ -40,7 +41,6 @@ func writeSchema(w io.Writer, d schema.Dialect, t *schema.Table, outputSqlFilePa
 		}
 	}
 
-
 	writeConst(sqlFileContent, w,
 		d.Table(t),
 		"create", inflect.Singularize(t.Name), "stmt",
@@ -68,18 +68,15 @@ func writeSchema(w io.Writer, d schema.Dialect, t *schema.Table, outputSqlFilePa
 
 	if len(t.Primary) != 0 {
 		writeConst(nil, w,
-			d.Select(t, t.Primary),
-			"select", inflect.Singularize(t.Name), "pkey", "stmt",
+			d.Select(t, t.Primary), "select", inflect.Singularize(t.Name), "by", joinField(t.Primary, "and"), "stmt",
 		)
 
 		writeConst(nil, w,
-			d.Update(t, t.Primary),
-			"update", inflect.Singularize(t.Name), "pkey", "stmt",
+			d.Update(t, t.Primary), "update", inflect.Singularize(t.Name), "by", joinField(t.Primary, "and"), "stmt",
 		)
 
 		writeConst(nil, w,
-			d.Delete(t, t.Primary),
-			"delete", inflect.Singularize(t.Name), "pkey", "stmt",
+			d.Delete(t, t.Primary), "delete", inflect.Singularize(t.Name), "by", joinField(t.Primary, "and"), "stmt",
 		)
 	}
 
@@ -92,31 +89,31 @@ func writeSchema(w io.Writer, d schema.Dialect, t *schema.Table, outputSqlFilePa
 
 		writeConst(nil, w,
 			d.Select(t, ix.Fields),
-			"select", ix.Name, "stmt",
+			"select", inflect.Singularize(t.Name), "by", joinField(ix.Fields, "and"), "stmt",
 		)
 
 		if !ix.Unique {
 
 			writeConst(nil, w,
 				d.SelectRange(t, ix.Fields),
-				"select", ix.Name, "range", "stmt",
+				"select", inflect.Singularize(t.Name), "range", "by", joinField(ix.Fields, "and"), "stmt",
 			)
 
 			writeConst(nil, w,
 				d.SelectCount(t, ix.Fields),
-				"select", ix.Name, "count", "stmt",
+				"select", inflect.Singularize(t.Name), "count", "by", joinField(ix.Fields, "and"), "stmt",
 			)
 
 		} else {
 
 			writeConst(nil, w,
 				d.Update(t, ix.Fields),
-				"update", ix.Name, "stmt",
+				"update", inflect.Singularize(t.Name), "by", joinField(ix.Fields, "and"), "stmt",
 			)
 
 			writeConst(nil, w,
 				d.Delete(t, ix.Fields),
-				"delete", ix.Name, "stmt",
+				"delete", inflect.Singularize(t.Name), "by", joinField(ix.Fields, "and"), "stmt",
 			)
 		}
 	}
@@ -141,12 +138,11 @@ func writePackage(w io.Writer, name string) {
 
 // writeConst is a helper function that writes the
 // body string to a Go const variable.
-func writeConst(content *bytes.Buffer, w io.Writer, body string, label ...string) {
+func writeConst(content *bytes.Buffer, w io.Writer, body string, label ...string) string{
 	// create a snake case variable name from
 	// the specified labels. Then convert the
 	// variable name to a quoted, camel case string.
-	name := strings.Join(label, "_")
-	name = inflect.Typeify(name)
+	name := getLabelName(label...)
 
 	// quote the body using multi-line quotes
 	body = fmt.Sprintf(sQuote, body)
@@ -155,4 +151,60 @@ func writeConst(content *bytes.Buffer, w io.Writer, body string, label ...string
 		content.WriteString(body[1:len(body)-1])
 	}
 	fmt.Fprintf(w, sConst, name, body)
+	log.Printf("const name:%s",name)
+	return name
+}
+
+func getLabelName(label ...string) string{
+	name := strings.Join(label, "_")
+	name = inflect.Typeify(name)
+	if strings.HasSuffix(name, `Stmt`){
+		name = inflect.CamelizeDownFirst(name)
+	}
+	return name
+}
+
+func joinField(fields[]*schema.Field, sep string)string{
+	var buf bytes.Buffer
+	for i,field := range fields{
+		if i==0{
+			buf.WriteString(field.Name[2:])
+		}else{
+			buf.WriteString(sep)
+			buf.WriteString(field.Name[2:])
+		}
+	}
+	return buf.String()
+}
+
+func joinObjectField(fields[]*schema.Field, sep string)string{
+	var buf bytes.Buffer
+	for i,field := range fields{
+		if i==0{
+			buf.WriteString(`v.`+field.Node.Name)
+		}else{
+			buf.WriteString(sep)
+			buf.WriteString(`v.`+field.Node.Name)
+		}
+	}
+	return buf.String()
+}
+
+func joinObjectFieldInDetails(fields[]*schema.Field, sep string, withType bool)string{
+	var buf bytes.Buffer
+	for i,field := range fields{
+		if i==0{
+			buf.WriteString(inflect.CamelizeDownFirst(field.Node.Name))
+			if withType{
+				buf.WriteString(" "+field.Node.Type)
+			}
+		}else{
+			buf.WriteString(sep)
+			buf.WriteString(inflect.CamelizeDownFirst(field.Node.Name))
+			if withType{
+				buf.WriteString(" "+field.Node.Type)
+			}
+		}
+	}
+	return buf.String()
 }

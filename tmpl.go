@@ -24,7 +24,7 @@ import (
 
 // function template to scan a single row.
 const sScanRow = `
-func Scan%s(row *sql.Row) (*%s, error) {
+func scan%s(row *sql.Row) (*%s, error) {
 	%s
 
 	err := row.Scan(
@@ -43,7 +43,7 @@ func Scan%s(row *sql.Row) (*%s, error) {
 
 // function template to scan multiple rows.
 const sScanRows = `
-func Scan%s(rows *sql.Rows) ([]*%s, error) {
+func scan%s(rows *sql.Rows) ([]*%s, error) {
 	var err error
 	var vv []*%s
 
@@ -65,7 +65,7 @@ func Scan%s(rows *sql.Rows) ([]*%s, error) {
 `
 
 const sSliceRow = `
-func Slice%s(v *%s) []interface{} {
+func slice%s(v *%s) []interface{} {
 	%s
 	%s
 
@@ -75,30 +75,30 @@ func Slice%s(v *%s) []interface{} {
 }
 `
 
-const sSelectRow = `
-func Select%s(db *sql.DB, query string, args ...interface{}) (*%s, error) {
+const sGenericSelectRow = `
+func genericSelect%s(db *sql.DB, query string, args ...interface{}) (*%s, error) {
 	row := db.QueryRow(query, args...)
-	return Scan%s(row)
+	return scan%s(row)
 }
 `
 
 // function template to select multiple rows.
-const sSelectRows = `
-func Select%s(db *sql.DB, query string, args ...interface{}) ([]*%s, error) {
+const sGenericSelectRows = `
+func genericSelect%s(db *sql.DB, query string, args ...interface{}) ([]*%s, error) {
 	rows, err := db.Query(query, args...)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	return Scan%s(rows)
+	return scan%s(rows)
 }
 `
 
 // function template to insert a single row.
-const sInsert = `
-func Insert%s(db *sql.DB, query string, v *%s) error {
+const sGenericInsert = `
+func genericInsert%s(db *sql.DB, query string, v *%s) error {
 
-	res, err := db.Exec(query, Slice%s(v)[1:]...)
+	res, err := db.Exec(query, slice%s(v)[1:]...)
 	if err != nil {
 		return err
 	}
@@ -109,12 +109,66 @@ func Insert%s(db *sql.DB, query string, v *%s) error {
 `
 
 // function template to update a single row.
-const sUpdate = `
-func Update%s(db *sql.DB, query string, v *%s) error {
+const sGenericUpdate = `
+func genericUpdate%s(db *sql.DB, query string, v *%s) error {
 
-	args := Slice%s(v)[1:]
+	args := slice%s(v)[1:]
 	args = append(args, v.ID)
 	_, err := db.Exec(query, args...)
 	return err 
 }
 `
+
+const sInsert = `
+func Insert%s(db *sql.DB,  v *%s) error {
+
+	res, err := db.Exec(%s, slice%s(v)[1:]...)
+	if err != nil {
+		return err
+	}
+
+	v.ID, err = res.LastInsertId()
+	return err
+}
+`
+const sDelete = `
+func Delete%s%s(db *sql.DB, %s) error {
+	args := []interface{}{%s}
+	_, err := db.Exec(%s, args...)
+	return err
+}
+`
+
+const sUpdate = `
+func Update%s%s(db *sql.DB, v *%s) error {
+	args := slice%s(v)
+    args = append(args,%s)
+	_, err := db.Exec(%s, args...)
+	return err
+}
+`
+
+const sGetBy = `
+func Get%s%s(db *sql.DB, %s) (*%s, error) {
+	args := []interface{}{%s}
+	v, err :=  genericSelect%s(db, %s, args...)
+	return v, err
+}
+`
+
+const sFindAll = `
+func FindAll%ss(db *sql.DB) ([]*%s, error) {
+	args := []interface{}{}
+	v, err :=  genericSelect%ss(db, %s, args...)
+	return v, err
+}
+`
+
+const sFindAllInRange = `
+func FindAll%ssInRange(db *sql.DB, limit int64, offset int64) ([]*%s, error) {
+	args := []interface{}{limit, offset}
+	v, err :=  genericSelect%ss(db, %s, args...)
+	return v, err
+}
+`
+

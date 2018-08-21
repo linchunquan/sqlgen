@@ -23,6 +23,7 @@ type Dialect interface {
 	Select(*Table, []*Field) string
 	SelectCount(*Table, []*Field) string
 	SelectRange(*Table, []*Field) string
+	SelectByUniqueIndex(t *Table, fields []*Field, index *Index) string
 	Param(int) string
 	Token(int) string
 }

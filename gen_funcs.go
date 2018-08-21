@@ -7,7 +7,9 @@ import (
 	"strings"
 
 	"github.com/acsellers/inflections"
+	"github.com/linchunquan/sqlgen/schema"
 	"github.com/linchunquan/sqlgen/parse"
+	"bitbucket.org/pkg/inflect"
 )
 
 func writeImports(w io.Writer, tree *parse.Node, pkgs ...string) {
@@ -229,25 +231,111 @@ func writeRowsFunc(srcPkgNameInShort string, w io.Writer, tree *parse.Node) {
 	)
 }
 
-func writeSelectRow(srcPkgNameInShort string, w io.Writer, tree *parse.Node) {
-	fmt.Fprintf(w, sSelectRow, tree.Type, srcPkgNameInShort+"."+tree.Type, tree.Type)
+func writeGenericSelectRow(srcPkgNameInShort string, w io.Writer, tree *parse.Node) {
+	fmt.Fprintf(w, sGenericSelectRow, tree.Type, srcPkgNameInShort+"."+tree.Type, tree.Type)
 }
 
-func writeSelectRows(srcPkgNameInShort string,w io.Writer, tree *parse.Node) {
+func writeGenericSelectRows(srcPkgNameInShort string,w io.Writer, tree *parse.Node) {
 	plural := inflections.Pluralize(tree.Type)
-	fmt.Fprintf(w, sSelectRows, plural, srcPkgNameInShort+"."+tree.Type, plural)
+	fmt.Fprintf(w, sGenericSelectRows, plural, srcPkgNameInShort+"."+tree.Type, plural)
 }
 
-func writeInsertFunc(srcPkgNameInShort string, w io.Writer, tree *parse.Node) {
+func writeGenericInsertFunc(srcPkgNameInShort string, w io.Writer, tree *parse.Node) {
 	// TODO this assumes I'm using the ID field.
 	// we should not make that assumption
-	fmt.Fprintf(w, sInsert, tree.Type, srcPkgNameInShort+"."+tree.Type, tree.Type)
+	fmt.Fprintf(w, sGenericInsert, tree.Type, srcPkgNameInShort+"."+tree.Type, tree.Type)
 }
 
-func writeUpdateFunc(srcPkgNameInShort string, w io.Writer, tree *parse.Node) {
-	fmt.Fprintf(w, sUpdate, tree.Type, srcPkgNameInShort+"."+tree.Type, tree.Type)
+func writeGenericUpdateFunc(srcPkgNameInShort string, w io.Writer, tree *parse.Node) {
+	fmt.Fprintf(w, sGenericUpdate, tree.Type, srcPkgNameInShort+"."+tree.Type, tree.Type)
 }
 
+func writeInsertFunc(srcPkgNameInShort string, w io.Writer,  tree *parse.Node, t *schema.Table){
+	fmt.Fprintf(w, sInsert, tree.Type, srcPkgNameInShort+"."+tree.Type, getLabelName("insert", inflect.Singularize(t.Name), "stmt"), tree.Type)
+}
+
+func writeDeleteFunc(srcPkgNameInShort string, w io.Writer,  tree *parse.Node, t *schema.Table){
+	if len(t.Primary) !=0 {
+		fmt.Fprintf(w, sDelete,
+			tree.Type,
+			getLabelName("by", joinField(t.Primary, "and")),
+			joinObjectFieldInDetails(t.Primary, ",", true),
+			joinObjectFieldInDetails(t.Primary, ",", false),
+			getLabelName("delete", inflect.Singularize(t.Name), "by", joinField(t.Primary, "and"), "stmt"))
+	}
+	if len(t.Index) !=0 {
+		for _, ix := range t.Index {
+			if ix.Unique {
+				fmt.Fprintf(w, sDelete,
+					tree.Type,
+					getLabelName("by", joinField(ix.Fields, "and")),
+					joinObjectFieldInDetails(ix.Fields, ",", true),
+					joinObjectFieldInDetails(ix.Fields, ",", false),
+					getLabelName("delete", inflect.Singularize(t.Name), "by", joinField(ix.Fields, "and"), "stmt"))
+			}
+		}
+	}
+}
+
+func writeUpdateFunc(srcPkgNameInShort string, w io.Writer,  tree *parse.Node, t *schema.Table){
+	if len(t.Primary) !=0 {
+		fmt.Fprintf(w, sUpdate,
+			tree.Type,
+			getLabelName("by", joinField(t.Primary, "and")),
+			srcPkgNameInShort+"."+tree.Type,
+			tree.Type,
+			joinObjectField(t.Primary, ","),
+			getLabelName("update", inflect.Singularize(t.Name), "by", joinField(t.Primary, "and"), "stmt"))
+	}
+	if len(t.Index) !=0 {
+		for _, ix := range t.Index {
+			if ix.Unique {
+				fmt.Fprintf(w, sUpdate,
+					tree.Type,
+					getLabelName("by", joinField(ix.Fields, "and")),
+					srcPkgNameInShort+"."+tree.Type,
+					tree.Type,
+					joinObjectField(ix.Fields, ","),
+					getLabelName("update", inflect.Singularize(t.Name), "by", joinField(ix.Fields, "and"), "stmt"))
+			}
+		}
+	}
+}
+
+func writeGetByFunc(srcPkgNameInShort string, w io.Writer,  tree *parse.Node, t *schema.Table){
+	if len(t.Primary) !=0 {
+		fmt.Fprintf(w, sGetBy,
+			tree.Type,
+			getLabelName("by", joinField(t.Primary, "and")),
+			joinObjectFieldInDetails(t.Primary, ",", true),
+			srcPkgNameInShort+"."+tree.Type,
+			joinObjectFieldInDetails(t.Primary, ",", false),
+			tree.Type,
+			getLabelName("select", inflect.Singularize(t.Name), "by", joinField(t.Primary, "and"), "stmt"))
+	}
+	if len(t.Index) !=0 {
+		for _, ix := range t.Index {
+			if ix.Unique {
+				fmt.Fprintf(w, sGetBy,
+					tree.Type,
+					getLabelName("by", joinField(ix.Fields, "and")),
+					joinObjectFieldInDetails(ix.Fields, ",", true),
+					srcPkgNameInShort+"."+tree.Type,
+					joinObjectFieldInDetails(ix.Fields, ",", false),
+					tree.Type,
+					getLabelName("select", inflect.Singularize(t.Name), "by", joinField(ix.Fields, "and"), "stmt"))
+			}
+		}
+	}
+}
+
+func writeFindAllFunc(srcPkgNameInShort string, w io.Writer,  tree *parse.Node, t *schema.Table){
+	fmt.Fprintf(w, sFindAll, tree.Type, srcPkgNameInShort+"."+tree.Type, tree.Type, getLabelName("select", inflect.Singularize(t.Name), "stmt"))
+}
+
+func writeFindAllInRangeFunc(srcPkgNameInShort string, w io.Writer,  tree *parse.Node, t *schema.Table){
+	fmt.Fprintf(w, sFindAllInRange, tree.Type, srcPkgNameInShort+"."+tree.Type, tree.Type, getLabelName("select", inflect.Singularize(t.Name), "range", "stmt"))
+}
 // join is a helper function that joins nodes
 // together by name using the seperator.
 func join(nodes []*parse.Node, sep string) string {

@@ -53,30 +53,39 @@ func main() {
 	strs:=strings.Split(*srcPkgName, "/")
 	srcPkgNameInShort:=strs[len(strs)-1]
 
+
 	var buf bytes.Buffer
 
-	if *genFuncs {
-		if *needImport{
-			writePackage(&buf, *pkgName)
-			writeImports(&buf, tree, "database/sql", *srcPkgName)
-		}
-		writeRowFunc(srcPkgNameInShort, &buf, tree)
-		writeRowsFunc(srcPkgNameInShort, &buf, tree)
-		writeSliceFunc(srcPkgNameInShort, &buf, tree)
-
-		if *extraFuncs {
-			writeSelectRow(srcPkgNameInShort, &buf, tree)
-			writeSelectRows(srcPkgNameInShort, &buf, tree)
-			writeInsertFunc(srcPkgNameInShort, &buf, tree)
-			writeUpdateFunc(srcPkgNameInShort, &buf, tree)
-		}
-	} else {
+	if *needImport{
 		writePackage(&buf, *pkgName)
+		writeImports(&buf, tree, "database/sql", *srcPkgName)
 	}
 
 	// write the sql functions
 	if *genSchema {
 		writeSchema(&buf, dialect, table, *outputSql)
+	}
+
+	if *genFuncs {
+
+		writeRowFunc(srcPkgNameInShort, &buf, tree)
+		writeRowsFunc(srcPkgNameInShort, &buf, tree)
+		writeSliceFunc(srcPkgNameInShort, &buf, tree)
+
+		if *extraFuncs {
+			writeGenericSelectRow(srcPkgNameInShort, &buf, tree)
+			writeGenericSelectRows(srcPkgNameInShort, &buf, tree)
+			//writeGenericInsertFunc(srcPkgNameInShort, &buf, tree)
+			//writeGenericUpdateFunc(srcPkgNameInShort, &buf, tree)
+			writeInsertFunc(srcPkgNameInShort, &buf, tree, table)
+			writeDeleteFunc(srcPkgNameInShort, &buf, tree, table)
+			writeUpdateFunc(srcPkgNameInShort, &buf, tree, table)
+			writeGetByFunc(srcPkgNameInShort, &buf, tree, table)
+			writeFindAllFunc(srcPkgNameInShort, &buf, tree, table)
+			writeFindAllInRangeFunc(srcPkgNameInShort, &buf, tree, table)
+		}
+	} else {
+		writePackage(&buf, *pkgName)
 	}
 
 	// formats the generated file using gofmt

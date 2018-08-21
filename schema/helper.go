@@ -55,6 +55,7 @@ func Load(tree *parse.Node) *Table {
 		//fix_here, simplify the field name
 		parts[0]="f"
 
+		field.Node = node
 		field.Name = strings.Join(parts, "_")
 		field.Name = inflections.Underscore(field.Name)
 
