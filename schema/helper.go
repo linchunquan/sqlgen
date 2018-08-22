@@ -14,6 +14,7 @@ func Load(tree *parse.Node) *Table {
 	// local map of indexes, used for quick
 	// lookups and de-duping.
 	indexs := map[string]*Index{}
+	foreigns := map[string]*Foreign{}
 
 	// pluralizes the table name and then
 	// formats in snake case.
@@ -93,7 +94,7 @@ func Load(tree *parse.Node) *Table {
 			}
 
 			if node.Tags.Unique != "" {
-				index, ok := indexs[node.Tags.Index]
+				index, ok := indexs[node.Tags.Unique]
 				if !ok {
 					index = new(Index)
 					index.Name = node.Tags.Unique
@@ -101,6 +102,7 @@ func Load(tree *parse.Node) *Table {
 					indexs[index.Name] = index
 					table.Index = append(table.Index, index)
 				}
+				index.Unique = true
 				index.Fields = append(index.Fields, field)
 			}
 
@@ -114,24 +116,32 @@ func Load(tree *parse.Node) *Table {
 			if node.Tags.Foreign != "" {
 				strs := strings.Split(node.Tags.Foreign, "@")
 				if len(strs)==2{
-					foreign := new(Foreign)
+
 					tableName := strings.TrimSpace(strs[1])
+
 					if len(tableName)>0{
-						foreign.Name = "ForeignKey_"+table.Name+"_"+node.Name
-						log.Printf("foreign table name:%s",foreign.Name)
-						foreign.FromColumns = []string{field.Name}
-						foreign.ToTable = tableName
-						columns := strings.Split(strs[0],"|")
-						for _, column := range columns{
-							c := strings.TrimSpace(column)
-							if len(c)>0 {
-								foreign.ToColumns = append(foreign.ToColumns, "f_"+c)
-							}
+
+						var fkName string
+						if len(node.Tags.ForeignGroup)==0{
+							fkName = "fk_"+table.Name+"_to_"+tableName
+						}else{
+							fkName = node.Tags.ForeignGroup
 						}
-						if len(foreign.ToColumns)>0 {
-							log.Printf("foreign:%+v", foreign)
+
+						foreign,ok := foreigns[fkName]
+						if !ok {
+							foreign = new(Foreign)
+							foreign.Name = fkName
+							foreign.Many = node.Tags.Many
+							foreign.ToTable = tableName
+							foreigns[fkName] = foreign
 							table.Foreigns = append(table.Foreigns, foreign)
+							log.Printf("add foreign key:%+v", foreign)
 						}
+
+						foreign.FromColumns = append(foreign.FromColumns, field.Name)
+						foreign.FromFields = append(foreign.FromFields, field)
+						foreign.ToColumns = append(foreign.ToColumns, "f_"+strings.TrimSpace(inflections.Underscore(strs[0])))
 					}
 				}
 			}

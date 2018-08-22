@@ -24,7 +24,7 @@ func isPathExist(_path string) bool {
 // UPDATE and DELETE values from Table t.
 func writeSchema(w io.Writer, d schema.Dialect, t *schema.Table, outputSqlFilePath string) {
 
-	var outputSql bool = len(outputSqlFilePath) > 0
+	var outputSql = len(outputSqlFilePath) > 0
 	var err error
 	var sqlFile *os.File
 	var sqlFileContent = &bytes.Buffer{}
@@ -68,15 +68,15 @@ func writeSchema(w io.Writer, d schema.Dialect, t *schema.Table, outputSqlFilePa
 
 	if len(t.Primary) != 0 {
 		writeConst(nil, w,
-			d.Select(t, t.Primary), "select", inflect.Singularize(t.Name), "by", joinField(t.Primary, "and"), "stmt",
+			d.Select(t, t.Primary), "select", inflect.Singularize(t.Name), "by", joinField(t.Primary, "And"), "stmt",
 		)
 
 		writeConst(nil, w,
-			d.Update(t, t.Primary), "update", inflect.Singularize(t.Name), "by", joinField(t.Primary, "and"), "stmt",
+			d.Update(t, t.Primary), "update", inflect.Singularize(t.Name), "by", joinField(t.Primary, "And"), "stmt",
 		)
 
 		writeConst(nil, w,
-			d.Delete(t, t.Primary), "delete", inflect.Singularize(t.Name), "by", joinField(t.Primary, "and"), "stmt",
+			d.Delete(t, t.Primary), "delete", inflect.Singularize(t.Name), "by", joinField(t.Primary, "And"), "stmt",
 		)
 	}
 
@@ -89,31 +89,31 @@ func writeSchema(w io.Writer, d schema.Dialect, t *schema.Table, outputSqlFilePa
 
 		writeConst(nil, w,
 			d.Select(t, ix.Fields),
-			"select", inflect.Singularize(t.Name), "by", joinField(ix.Fields, "and"), "stmt",
+			"select", inflect.Singularize(t.Name), "by", joinField(ix.Fields, "And"), "stmt",
 		)
 
 		if !ix.Unique {
 
 			writeConst(nil, w,
 				d.SelectRange(t, ix.Fields),
-				"select", inflect.Singularize(t.Name), "range", "by", joinField(ix.Fields, "and"), "stmt",
+				"select", inflect.Singularize(t.Name), "range", "by", joinField(ix.Fields, "And"), "stmt",
 			)
 
 			writeConst(nil, w,
 				d.SelectCount(t, ix.Fields),
-				"select", inflect.Singularize(t.Name), "count", "by", joinField(ix.Fields, "and"), "stmt",
+				"select", inflect.Singularize(t.Name), "count", "by", joinField(ix.Fields, "And"), "stmt",
 			)
 
 		} else {
 
 			writeConst(nil, w,
 				d.Update(t, ix.Fields),
-				"update", inflect.Singularize(t.Name), "by", joinField(ix.Fields, "and"), "stmt",
+				"update", inflect.Singularize(t.Name), "by", joinField(ix.Fields, "And"), "stmt",
 			)
 
 			writeConst(nil, w,
 				d.Delete(t, ix.Fields),
-				"delete", inflect.Singularize(t.Name), "by", joinField(ix.Fields, "and"), "stmt",
+				"delete", inflect.Singularize(t.Name), "by", joinField(ix.Fields, "And"), "stmt",
 			)
 		}
 	}
@@ -123,6 +123,18 @@ func writeSchema(w io.Writer, d schema.Dialect, t *schema.Table, outputSqlFilePa
 			d.Foreign(t, fk),
 			"create", inflect.Singularize(fk.Name), "stmt",
 		)
+
+		writeConst(nil, w,
+			d.Select(t, fk.FromFields),
+			"select", inflect.Singularize(t.Name), "of", inflect.Singularize(fk.ToTable), "by", joinColumnNames(fk.FromColumns, "And"), "stmt",
+		)
+
+		if fk.Many{
+			writeConst(nil, w,
+				d.SelectRange(t, fk.FromFields),
+				"select", inflect.Singularize(t.Name), "of", inflect.Singularize(fk.ToTable), "range", "by", joinField(fk.FromFields, "And"), "stmt",
+			)
+		}
 	}
 
 	if outputSql{
@@ -168,10 +180,23 @@ func joinField(fields[]*schema.Field, sep string)string{
 	var buf bytes.Buffer
 	for i,field := range fields{
 		if i==0{
-			buf.WriteString(field.Name[2:])
+			buf.WriteString(inflect.Camelize(field.Name[2:]))
 		}else{
 			buf.WriteString(sep)
-			buf.WriteString(field.Name[2:])
+			buf.WriteString(inflect.Camelize(field.Name[2:]))
+		}
+	}
+	return buf.String()
+}
+
+func joinColumnNames(fields[]string, sep string)string{
+	var buf bytes.Buffer
+	for i,field := range fields{
+		if i==0{
+			buf.WriteString(inflect.Camelize(field[2:]))
+		}else{
+			buf.WriteString(sep)
+			buf.WriteString(inflect.Camelize(field[2:]))
 		}
 	}
 	return buf.String()

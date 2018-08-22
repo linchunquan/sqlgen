@@ -258,20 +258,20 @@ func writeDeleteFunc(srcPkgNameInShort string, w io.Writer,  tree *parse.Node, t
 	if len(t.Primary) !=0 {
 		fmt.Fprintf(w, sDelete,
 			tree.Type,
-			getLabelName("by", joinField(t.Primary, "and")),
+			getLabelName("by", joinField(t.Primary, "And")),
 			joinObjectFieldInDetails(t.Primary, ",", true),
 			joinObjectFieldInDetails(t.Primary, ",", false),
-			getLabelName("delete", inflect.Singularize(t.Name), "by", joinField(t.Primary, "and"), "stmt"))
+			getLabelName("delete", inflect.Singularize(t.Name), "by", joinField(t.Primary, "And"), "stmt"))
 	}
 	if len(t.Index) !=0 {
 		for _, ix := range t.Index {
 			if ix.Unique {
 				fmt.Fprintf(w, sDelete,
 					tree.Type,
-					getLabelName("by", joinField(ix.Fields, "and")),
+					getLabelName("by", joinField(ix.Fields, "And")),
 					joinObjectFieldInDetails(ix.Fields, ",", true),
 					joinObjectFieldInDetails(ix.Fields, ",", false),
-					getLabelName("delete", inflect.Singularize(t.Name), "by", joinField(ix.Fields, "and"), "stmt"))
+					getLabelName("delete", inflect.Singularize(t.Name), "by", joinField(ix.Fields, "And"), "stmt"))
 			}
 		}
 	}
@@ -281,22 +281,22 @@ func writeUpdateFunc(srcPkgNameInShort string, w io.Writer,  tree *parse.Node, t
 	if len(t.Primary) !=0 {
 		fmt.Fprintf(w, sUpdate,
 			tree.Type,
-			getLabelName("by", joinField(t.Primary, "and")),
+			getLabelName("by", joinField(t.Primary, "And")),
 			srcPkgNameInShort+"."+tree.Type,
 			tree.Type,
 			joinObjectField(t.Primary, ","),
-			getLabelName("update", inflect.Singularize(t.Name), "by", joinField(t.Primary, "and"), "stmt"))
+			getLabelName("update", inflect.Singularize(t.Name), "by", joinField(t.Primary, "And"), "stmt"))
 	}
 	if len(t.Index) !=0 {
 		for _, ix := range t.Index {
 			if ix.Unique {
 				fmt.Fprintf(w, sUpdate,
 					tree.Type,
-					getLabelName("by", joinField(ix.Fields, "and")),
+					getLabelName("by", joinField(ix.Fields, "And")),
 					srcPkgNameInShort+"."+tree.Type,
 					tree.Type,
 					joinObjectField(ix.Fields, ","),
-					getLabelName("update", inflect.Singularize(t.Name), "by", joinField(ix.Fields, "and"), "stmt"))
+					getLabelName("update", inflect.Singularize(t.Name), "by", joinField(ix.Fields, "And"), "stmt"))
 			}
 		}
 	}
@@ -306,24 +306,88 @@ func writeGetByFunc(srcPkgNameInShort string, w io.Writer,  tree *parse.Node, t 
 	if len(t.Primary) !=0 {
 		fmt.Fprintf(w, sGetBy,
 			tree.Type,
-			getLabelName("by", joinField(t.Primary, "and")),
+			getLabelName("by", joinField(t.Primary, "And")),
 			joinObjectFieldInDetails(t.Primary, ",", true),
 			srcPkgNameInShort+"."+tree.Type,
 			joinObjectFieldInDetails(t.Primary, ",", false),
 			tree.Type,
-			getLabelName("select", inflect.Singularize(t.Name), "by", joinField(t.Primary, "and"), "stmt"))
+			getLabelName("select", inflect.Singularize(t.Name), "by", joinField(t.Primary, "And"), "stmt"))
 	}
 	if len(t.Index) !=0 {
 		for _, ix := range t.Index {
 			if ix.Unique {
 				fmt.Fprintf(w, sGetBy,
 					tree.Type,
-					getLabelName("by", joinField(ix.Fields, "and")),
+					getLabelName("by", joinField(ix.Fields, "And")),
 					joinObjectFieldInDetails(ix.Fields, ",", true),
 					srcPkgNameInShort+"."+tree.Type,
 					joinObjectFieldInDetails(ix.Fields, ",", false),
 					tree.Type,
-					getLabelName("select", inflect.Singularize(t.Name), "by", joinField(ix.Fields, "and"), "stmt"))
+					getLabelName("select", inflect.Singularize(t.Name), "by", joinField(ix.Fields, "And"), "stmt"))
+			}
+		}
+	}
+}
+
+func writeFindByIndexFunc(srcPkgNameInShort string, w io.Writer,  tree *parse.Node, t *schema.Table){
+	if len(t.Index) !=0 {
+		for _, ix := range t.Index {
+			if !ix.Unique {
+				fmt.Fprintf(w, sFindByIndex,
+					tree.Type,
+					getLabelName("by", joinField(ix.Fields, "And")),
+					joinObjectFieldInDetails(ix.Fields, ",", true),
+					srcPkgNameInShort+"."+tree.Type,
+					joinObjectFieldInDetails(ix.Fields, ",", false),
+					tree.Type,
+					getLabelName("select", inflect.Singularize(t.Name), "by", joinField(ix.Fields, "And"), "stmt"))
+
+				fmt.Fprintf(w, sFindByIndexInRange,
+					tree.Type,
+					getLabelName("by", joinField(ix.Fields, "And")),
+					joinObjectFieldInDetails(ix.Fields, ",", true),
+					srcPkgNameInShort+"."+tree.Type,
+					joinObjectFieldInDetails(ix.Fields, ",", false),
+					tree.Type,
+					getLabelName("select", inflect.Singularize(t.Name), "range", "by", joinField(ix.Fields, "And"), "stmt"))
+			}
+		}
+	}
+}
+
+func writeFindByForeignKeyFunc(srcPkgNameInShort string, w io.Writer,  tree *parse.Node, t *schema.Table){
+	if len(t.Foreigns) !=0 {
+		for _, fk := range t.Foreigns {
+			if fk.Many {
+				fmt.Fprintf(w, sFindByForeignKey,
+					tree.Type,
+					inflect.Camelize(fk.ToTable[:len(fk.ToTable)-1]),
+					getLabelName("by", joinField(fk.FromFields, "And")),
+					joinObjectFieldInDetails(fk.FromFields, ",", true),
+					srcPkgNameInShort+"."+tree.Type,
+					joinObjectFieldInDetails(fk.FromFields, ",", false),
+					tree.Type,
+					getLabelName("select", inflect.Singularize(t.Name), "of", inflect.Singularize(fk.ToTable), "by", joinColumnNames(fk.FromColumns, "And"), "stmt"))
+
+				fmt.Fprintf(w, sFindByForeignKeyInRange,
+					tree.Type,
+					inflect.Camelize(fk.ToTable[:len(fk.ToTable)-1]),
+					getLabelName("by", joinField(fk.FromFields, "And")),
+					joinObjectFieldInDetails(fk.FromFields, ",", true),
+					srcPkgNameInShort+"."+tree.Type,
+					joinObjectFieldInDetails(fk.FromFields, ",", false),
+					tree.Type,
+					getLabelName("select", inflect.Singularize(t.Name), "of", inflect.Singularize(fk.ToTable), "range", "by", joinField(fk.FromFields, "And"), "stmt"))
+			}else{
+				fmt.Fprintf(w, sGetByForeignKey,
+					tree.Type,
+					inflect.Camelize(fk.ToTable[:len(fk.ToTable)-1]),
+					getLabelName("by", joinField(fk.FromFields, "And")),
+					joinObjectFieldInDetails(fk.FromFields, ",", true),
+					srcPkgNameInShort+"."+tree.Type,
+					joinObjectFieldInDetails(fk.FromFields, ",", false),
+					tree.Type,
+					getLabelName("select", inflect.Singularize(t.Name), "of", inflect.Singularize(fk.ToTable), "by", joinColumnNames(fk.FromColumns, "And"), "stmt"))
 			}
 		}
 	}

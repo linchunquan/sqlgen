@@ -83,6 +83,8 @@ func main() {
 			writeGetByFunc(srcPkgNameInShort, &buf, tree, table)
 			writeFindAllFunc(srcPkgNameInShort, &buf, tree, table)
 			writeFindAllInRangeFunc(srcPkgNameInShort, &buf, tree, table)
+			writeFindByIndexFunc(srcPkgNameInShort, &buf, tree, table)
+			writeFindByForeignKeyFunc(srcPkgNameInShort, &buf, tree, table)
 		}
 	} else {
 		writePackage(&buf, *pkgName)

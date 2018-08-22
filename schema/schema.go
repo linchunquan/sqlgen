@@ -19,12 +19,11 @@ const (
 )
 
 type Table struct {
-	Name string
-
-	Fields  []*Field
-	Index   []*Index
-	Primary []*Field
-	Foreigns[]*Foreign
+	Name     string
+	Fields   []*Field
+	Index    []*Index
+	Primary  []*Field
+	Foreigns []*Foreign
 }
 
 type Field struct {
@@ -37,15 +36,16 @@ type Field struct {
 }
 
 type Index struct {
-	Name   string
-	Unique bool
-
-	Fields []*Field
+	Name    string
+	Unique  bool
+	Fields  []*Field
 }
 
 type Foreign struct{
-	Name      string
+	Name        string
 	FromColumns []string
+	FromFields  []*Field
 	ToTable     string
 	ToColumns   []string
+	Many        bool
 }

@@ -156,6 +156,46 @@ func Get%s%s(db *sql.DB, %s) (*%s, error) {
 }
 `
 
+const sFindByIndex = `
+func Find%ss%s(db *sql.DB, %s) ([]*%s, error) {
+	args := []interface{}{%s}
+	v, err :=  genericSelect%ss(db, %s, args...)
+	return v, err
+}
+`
+
+const sFindByIndexInRange = `
+func Find%ss%sInRange(db *sql.DB, %s, limit int64, offset int64) ([]*%s, error) {
+	args := []interface{}{%s, limit, offset}
+	v, err :=  genericSelect%ss(db, %s, args...)
+	return v, err
+}
+`
+
+const sFindByForeignKey = `
+func Find%ssOf%s%s(db *sql.DB, %s) ([]*%s, error) {
+	args := []interface{}{%s}
+	v, err :=  genericSelect%ss(db, %s, args...)
+	return v, err
+}
+`
+
+const sFindByForeignKeyInRange = `
+func Find%ssOf%s%sInRange(db *sql.DB, %s, limit int64, offset int64) ([]*%s, error) {
+	args := []interface{}{%s, limit, offset}
+	v, err :=  genericSelect%ss(db, %s, args...)
+	return v, err
+}
+`
+
+const sGetByForeignKey = `
+func Get%sOf%s%s(db *sql.DB, %s) (*%s, error) {
+	args := []interface{}{%s}
+	v, err :=  genericSelect%s(db, %s, args...)
+	return v, err
+}
+`
+
 const sFindAll = `
 func FindAll%ss(db *sql.DB) ([]*%s, error) {
 	args := []interface{}{}

@@ -26,6 +26,8 @@ type Tag struct {
 	Skip    bool   `yaml:"skip"`
 	Encode  string `yaml:"encode"`
 	Foreign string `yaml:"fk"`
+	Many    bool   `yaml:"many"`
+	ForeignGroup string `yaml:"fkGroup"`
 }
 
 // parseTag parses a tag string from the struct
