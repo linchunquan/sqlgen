@@ -58,7 +58,7 @@ func main() {
 
 	if *needImport{
 		writePackage(&buf, *pkgName)
-		writeImports(&buf, tree, "database/sql", *srcPkgName)
+		writeImports(&buf, tree, "database/sql", "github.com/linchunquan/sqlgen/db", *srcPkgName)
 	}
 
 	// write the sql functions
@@ -85,6 +85,8 @@ func main() {
 			writeFindAllInRangeFunc(srcPkgNameInShort, &buf, tree, table)
 			writeFindByIndexFunc(srcPkgNameInShort, &buf, tree, table)
 			writeFindByForeignKeyFunc(srcPkgNameInShort, &buf, tree, table)
+			writeCountAllFunc(&buf,tree,table)
+			writeCountByIndexFunc(&buf,tree,table)
 		}
 	} else {
 		writePackage(&buf, *pkgName)

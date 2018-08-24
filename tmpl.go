@@ -76,7 +76,7 @@ func slice%s(v *%s) []interface{} {
 `
 
 const sGenericSelectRow = `
-func genericSelect%s(db *sql.DB, query string, args ...interface{}) (*%s, error) {
+func genericSelect%s(db db.SimpleDB, query string, args ...interface{}) (*%s, error) {
 	row := db.QueryRow(query, args...)
 	return scan%s(row)
 }
@@ -84,7 +84,7 @@ func genericSelect%s(db *sql.DB, query string, args ...interface{}) (*%s, error)
 
 // function template to select multiple rows.
 const sGenericSelectRows = `
-func genericSelect%s(db *sql.DB, query string, args ...interface{}) ([]*%s, error) {
+func genericSelect%s(db db.SimpleDB, query string, args ...interface{}) ([]*%s, error) {
 	rows, err := db.Query(query, args...)
 	if err != nil {
 		return nil, err
@@ -96,7 +96,7 @@ func genericSelect%s(db *sql.DB, query string, args ...interface{}) ([]*%s, erro
 
 // function template to insert a single row.
 const sGenericInsert = `
-func genericInsert%s(db *sql.DB, query string, v *%s) error {
+func genericInsert%s(db db.SimpleDB, query string, v *%s) error {
 
 	res, err := db.Exec(query, slice%s(v)[1:]...)
 	if err != nil {
@@ -110,7 +110,7 @@ func genericInsert%s(db *sql.DB, query string, v *%s) error {
 
 // function template to update a single row.
 const sGenericUpdate = `
-func genericUpdate%s(db *sql.DB, query string, v *%s) error {
+func genericUpdate%s(db db.SimpleDB, query string, v *%s) error {
 
 	args := slice%s(v)[1:]
 	args = append(args, v.ID)
@@ -120,7 +120,7 @@ func genericUpdate%s(db *sql.DB, query string, v *%s) error {
 `
 
 const sInsert = `
-func Insert%s(db *sql.DB,  v *%s) error {
+func Insert%s(db db.SimpleDB,  v *%s) error {
 
 	res, err := db.Exec(%s, slice%s(v)[1:]...)
 	if err != nil {
@@ -132,7 +132,7 @@ func Insert%s(db *sql.DB,  v *%s) error {
 }
 `
 const sDelete = `
-func Delete%s%s(db *sql.DB, %s) error {
+func Delete%s%s(db db.SimpleDB, %s) error {
 	args := []interface{}{%s}
 	_, err := db.Exec(%s, args...)
 	return err
@@ -140,7 +140,7 @@ func Delete%s%s(db *sql.DB, %s) error {
 `
 
 const sUpdate = `
-func Update%s%s(db *sql.DB, v *%s) error {
+func Update%s%s(db db.SimpleDB, v *%s) error {
 	args := slice%s(v)
     args = append(args,%s)
 	_, err := db.Exec(%s, args...)
@@ -149,7 +149,7 @@ func Update%s%s(db *sql.DB, v *%s) error {
 `
 
 const sGetBy = `
-func Get%s%s(db *sql.DB, %s) (*%s, error) {
+func Get%s%s(db db.SimpleDB, %s) (*%s, error) {
 	args := []interface{}{%s}
 	v, err :=  genericSelect%s(db, %s, args...)
 	return v, err
@@ -157,7 +157,7 @@ func Get%s%s(db *sql.DB, %s) (*%s, error) {
 `
 
 const sFindByIndex = `
-func Find%ss%s(db *sql.DB, %s) ([]*%s, error) {
+func Find%ss%s(db db.SimpleDB, %s) ([]*%s, error) {
 	args := []interface{}{%s}
 	v, err :=  genericSelect%ss(db, %s, args...)
 	return v, err
@@ -165,7 +165,7 @@ func Find%ss%s(db *sql.DB, %s) ([]*%s, error) {
 `
 
 const sFindByIndexInRange = `
-func Find%ss%sInRange(db *sql.DB, %s, limit int64, offset int64) ([]*%s, error) {
+func Find%ss%sInRange(db db.SimpleDB, %s, limit int64, offset int64) ([]*%s, error) {
 	args := []interface{}{%s, limit, offset}
 	v, err :=  genericSelect%ss(db, %s, args...)
 	return v, err
@@ -173,7 +173,7 @@ func Find%ss%sInRange(db *sql.DB, %s, limit int64, offset int64) ([]*%s, error) 
 `
 
 const sFindByForeignKey = `
-func Find%ssOf%s%s(db *sql.DB, %s) ([]*%s, error) {
+func Find%ssOf%s%s(db db.SimpleDB, %s) ([]*%s, error) {
 	args := []interface{}{%s}
 	v, err :=  genericSelect%ss(db, %s, args...)
 	return v, err
@@ -181,7 +181,7 @@ func Find%ssOf%s%s(db *sql.DB, %s) ([]*%s, error) {
 `
 
 const sFindByForeignKeyInRange = `
-func Find%ssOf%s%sInRange(db *sql.DB, %s, limit int64, offset int64) ([]*%s, error) {
+func Find%ssOf%s%sInRange(db db.SimpleDB, %s, limit int64, offset int64) ([]*%s, error) {
 	args := []interface{}{%s, limit, offset}
 	v, err :=  genericSelect%ss(db, %s, args...)
 	return v, err
@@ -189,7 +189,7 @@ func Find%ssOf%s%sInRange(db *sql.DB, %s, limit int64, offset int64) ([]*%s, err
 `
 
 const sGetByForeignKey = `
-func Get%sOf%s%s(db *sql.DB, %s) (*%s, error) {
+func Get%sOf%s%s(db db.SimpleDB, %s) (*%s, error) {
 	args := []interface{}{%s}
 	v, err :=  genericSelect%s(db, %s, args...)
 	return v, err
@@ -197,7 +197,7 @@ func Get%sOf%s%s(db *sql.DB, %s) (*%s, error) {
 `
 
 const sFindAll = `
-func FindAll%ss(db *sql.DB) ([]*%s, error) {
+func FindAll%ss(db db.SimpleDB) ([]*%s, error) {
 	args := []interface{}{}
 	v, err :=  genericSelect%ss(db, %s, args...)
 	return v, err
@@ -205,10 +205,28 @@ func FindAll%ss(db *sql.DB) ([]*%s, error) {
 `
 
 const sFindAllInRange = `
-func FindAll%ssInRange(db *sql.DB, limit int64, offset int64) ([]*%s, error) {
+func FindAll%ssInRange(db db.SimpleDB, limit int64, offset int64) ([]*%s, error) {
 	args := []interface{}{limit, offset}
 	v, err :=  genericSelect%ss(db, %s, args...)
 	return v, err
 }
 `
 
+const sCount = `
+func Count%s(db db.SimpleDB)(int, error){
+    var count int
+	row := db.QueryRow(%s)
+	err := row.Scan(&count)
+	return count, err
+}
+`
+
+const sCountByIndex = `
+func Count%s%s(db db.SimpleDB, %s)(int, error){
+    var count int
+    args := []interface{}{%s}
+	row := db.QueryRow(%s, args...)
+	err := row.Scan(&count)
+	return count, err
+}
+`

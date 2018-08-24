@@ -400,6 +400,24 @@ func writeFindAllFunc(srcPkgNameInShort string, w io.Writer,  tree *parse.Node, 
 func writeFindAllInRangeFunc(srcPkgNameInShort string, w io.Writer,  tree *parse.Node, t *schema.Table){
 	fmt.Fprintf(w, sFindAllInRange, tree.Type, srcPkgNameInShort+"."+tree.Type, tree.Type, getLabelName("select", inflect.Singularize(t.Name), "range", "stmt"))
 }
+
+func writeCountAllFunc(w io.Writer,  tree *parse.Node, t *schema.Table){
+	fmt.Fprintf(w, sCount, tree.Type,  getLabelName("select", inflect.Singularize(t.Name), "count", "stmt"))
+}
+
+func writeCountByIndexFunc(w io.Writer,  tree *parse.Node, t *schema.Table){
+	if len(t.Index) !=0 {
+		for _, ix := range t.Index {
+			fmt.Fprintf(w, sCountByIndex,
+				tree.Type,
+				getLabelName("by", joinField(ix.Fields, "And")),
+				joinObjectFieldInDetails(ix.Fields, ",", true),
+				joinObjectFieldInDetails(ix.Fields, ",", false),
+				getLabelName("select", inflect.Singularize(t.Name), "count", "by", joinField(ix.Fields, "And"), "stmt"))
+		}
+	}
+}
+
 // join is a helper function that joins nodes
 // together by name using the seperator.
 func join(nodes []*parse.Node, sep string) string {

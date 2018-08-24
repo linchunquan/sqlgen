@@ -92,25 +92,21 @@ func writeSchema(w io.Writer, d schema.Dialect, t *schema.Table, outputSqlFilePa
 			"select", inflect.Singularize(t.Name), "by", joinField(ix.Fields, "And"), "stmt",
 		)
 
-		if !ix.Unique {
+		writeConst(nil, w,
+			d.SelectCount(t, ix.Fields),
+			"select", inflect.Singularize(t.Name), "count", "by", joinField(ix.Fields, "And"), "stmt",
+		)
 
+		if !ix.Unique {
 			writeConst(nil, w,
 				d.SelectRange(t, ix.Fields),
 				"select", inflect.Singularize(t.Name), "range", "by", joinField(ix.Fields, "And"), "stmt",
 			)
-
-			writeConst(nil, w,
-				d.SelectCount(t, ix.Fields),
-				"select", inflect.Singularize(t.Name), "count", "by", joinField(ix.Fields, "And"), "stmt",
-			)
-
 		} else {
-
 			writeConst(nil, w,
 				d.Update(t, ix.Fields),
 				"update", inflect.Singularize(t.Name), "by", joinField(ix.Fields, "And"), "stmt",
 			)
-
 			writeConst(nil, w,
 				d.Delete(t, ix.Fields),
 				"delete", inflect.Singularize(t.Name), "by", joinField(ix.Fields, "And"), "stmt",
