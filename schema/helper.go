@@ -160,7 +160,7 @@ var types = map[uint8]int{
 	parse.Int8:       INTEGER,
 	parse.Int16:      INTEGER,
 	parse.Int32:      INTEGER,
-	parse.Int64:      INTEGER,
+	parse.Int64:      LONG,
 	parse.Uint:       INTEGER,
 	parse.Uint8:      INTEGER,
 	parse.Uint16:     INTEGER,
@@ -184,6 +184,7 @@ var sqlTypes = map[string]int{
 	"number":   INTEGER,
 	"integer":  INTEGER,
 	"int":      INTEGER,
+	"long":     LONG,
 	"blob":     BLOB,
 	"bytea":    BLOB,
 }

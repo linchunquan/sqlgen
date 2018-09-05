@@ -24,6 +24,8 @@ func (d *posgres) Column(f *Field) (_ string) {
 	switch f.Type {
 	case INTEGER:
 		return "INTEGER"
+	case LONG:
+		return "LONG"
 	case BOOLEAN:
 		return "BOOLEAN"
 	case BLOB:

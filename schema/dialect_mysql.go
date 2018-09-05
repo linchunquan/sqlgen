@@ -19,6 +19,8 @@ func (d *mysql) Column(f *Field) (_ string) {
 	switch f.Type {
 	case INTEGER:
 		return "INTEGER"
+	case LONG:
+		return "BIGINT"
 	case BOOLEAN:
 		return "BOOLEAN"
 	case BLOB:

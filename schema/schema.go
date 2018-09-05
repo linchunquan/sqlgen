@@ -6,6 +6,7 @@ import(
 // List of basic types
 const (
 	INTEGER int = iota
+	LONG
 	VARCHAR
 	BOOLEAN
 	REAL

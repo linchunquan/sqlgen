@@ -165,9 +165,11 @@ func writeConst(content *bytes.Buffer, w io.Writer, body string, label ...string
 
 func getLabelName(label ...string) string{
 	name := strings.Join(label, "_")
-	name = inflect.Typeify(name)
+//	name = inflect.Typeify(name)
 	if strings.HasSuffix(name, `Stmt`){
 		name = inflect.CamelizeDownFirst(name)
+	}else{
+		name = inflect.Camelize(name)
 	}
 	return name
 }
