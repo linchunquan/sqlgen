@@ -6,6 +6,7 @@ import (
 	"github.com/acsellers/inflections"
 	"github.com/linchunquan/sqlgen/parse"
 	"log"
+	"fmt"
 )
 
 func Load(tree *parse.Node) *Table {
@@ -114,34 +115,42 @@ func Load(tree *parse.Node) *Table {
 			}
 
 			if node.Tags.Foreign != "" {
-				strs := strings.Split(node.Tags.Foreign, "@")
-				if len(strs)==2{
 
-					tableName := strings.TrimSpace(strs[1])
+				foreignConfigs := strings.Split(node.Tags.Foreign, ";")
+				n:=len(foreignConfigs)
+				fmt.Printf("foreignConfigs:%+v\n",foreignConfigs)
+				for i:=0;i<n;i++{
+					strs := strings.Split(strings.TrimSpace(foreignConfigs[i]), "@")
+					if len(strs)>=2{
+						tableName := strings.TrimSpace(strs[1])
+						if len(tableName)>0{
+							var fkName string
+							if len(strs)==2{
+								if len(node.Tags.ForeignGroup)==0{
+									fkName = "fk_"+table.Name+"_to_"+tableName
+								}else{
+									fkName = node.Tags.ForeignGroup
+								}
+							}else{
+								fkName = strs[2]
+								fmt.Printf(" ===================>fkName:%s\n",fkName)
+							}
 
-					if len(tableName)>0{
+							foreign,ok := foreigns[fkName]
+							if !ok {
+								foreign = new(Foreign)
+								foreign.Name = fkName
+								foreign.Many = node.Tags.Many
+								foreign.ToTable = tableName
+								foreigns[fkName] = foreign
+								table.Foreigns = append(table.Foreigns, foreign)
+								log.Printf("add foreign key:%+v", foreign)
+							}
 
-						var fkName string
-						if len(node.Tags.ForeignGroup)==0{
-							fkName = "fk_"+table.Name+"_to_"+tableName
-						}else{
-							fkName = node.Tags.ForeignGroup
+							foreign.FromColumns = append(foreign.FromColumns, field.Name)
+							foreign.FromFields = append(foreign.FromFields, field)
+							foreign.ToColumns = append(foreign.ToColumns, "f_"+strings.TrimSpace(inflections.Underscore(strs[0])))
 						}
-
-						foreign,ok := foreigns[fkName]
-						if !ok {
-							foreign = new(Foreign)
-							foreign.Name = fkName
-							foreign.Many = node.Tags.Many
-							foreign.ToTable = tableName
-							foreigns[fkName] = foreign
-							table.Foreigns = append(table.Foreigns, foreign)
-							log.Printf("add foreign key:%+v", foreign)
-						}
-
-						foreign.FromColumns = append(foreign.FromColumns, field.Name)
-						foreign.FromFields = append(foreign.FromFields, field)
-						foreign.ToColumns = append(foreign.ToColumns, "f_"+strings.TrimSpace(inflections.Underscore(strs[0])))
 					}
 				}
 			}
