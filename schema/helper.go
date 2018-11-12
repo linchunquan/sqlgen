@@ -6,7 +6,6 @@ import (
 	"github.com/acsellers/inflections"
 	"github.com/linchunquan/sqlgen/parse"
 	"log"
-	"fmt"
 )
 
 func Load(tree *parse.Node) *Table {
@@ -84,27 +83,39 @@ func Load(tree *parse.Node) *Table {
 			}
 
 			if node.Tags.Index != "" {
-				index, ok := indexs[node.Tags.Index]
-				if !ok {
-					index = new(Index)
-					index.Name = node.Tags.Index
-					indexs[index.Name] = index
-					table.Index = append(table.Index, index)
+				indexSet, notEmpty := splitIndexString(node.Tags.Index)
+				if notEmpty{
+					for i, _ := range indexSet{
+						indexName:=indexSet[i]
+						index, ok := indexs[indexName]
+						if !ok {
+							index = new(Index)
+							index.Name = indexName
+							indexs[index.Name] = index
+							table.Index = append(table.Index, index)
+						}
+						index.Fields = append(index.Fields, field)
+					}
 				}
-				index.Fields = append(index.Fields, field)
 			}
 
 			if node.Tags.Unique != "" {
-				index, ok := indexs[node.Tags.Unique]
-				if !ok {
-					index = new(Index)
-					index.Name = node.Tags.Unique
-					index.Unique = true
-					indexs[index.Name] = index
-					table.Index = append(table.Index, index)
+				indexSet, notEmpty := splitIndexString(node.Tags.Unique)
+				if notEmpty{
+					for i, _ := range indexSet{
+						indexName:=indexSet[i]
+						index, ok := indexs[indexName]
+						if !ok {
+							index = new(Index)
+							index.Name = indexName
+							index.Unique = true
+							indexs[index.Name] = index
+							table.Index = append(table.Index, index)
+						}
+						index.Unique = true
+						index.Fields = append(index.Fields, field)
+					}
 				}
-				index.Unique = true
-				index.Fields = append(index.Fields, field)
 			}
 
 			if node.Tags.Type != "" {
@@ -115,10 +126,8 @@ func Load(tree *parse.Node) *Table {
 			}
 
 			if node.Tags.Foreign != "" {
-
 				foreignConfigs := strings.Split(node.Tags.Foreign, ";")
 				n:=len(foreignConfigs)
-				fmt.Printf("foreignConfigs:%+v\n",foreignConfigs)
 				for i:=0;i<n;i++{
 					strs := strings.Split(strings.TrimSpace(foreignConfigs[i]), "@")
 					if len(strs)>=2{
@@ -133,9 +142,7 @@ func Load(tree *parse.Node) *Table {
 								}
 							}else{
 								fkName = strs[2]
-								fmt.Printf(" ===================>fkName:%s\n",fkName)
 							}
-
 							foreign,ok := foreigns[fkName]
 							if !ok {
 								foreign = new(Foreign)
@@ -146,7 +153,6 @@ func Load(tree *parse.Node) *Table {
 								table.Foreigns = append(table.Foreigns, foreign)
 								log.Printf("add foreign key:%+v", foreign)
 							}
-
 							foreign.FromColumns = append(foreign.FromColumns, field.Name)
 							foreign.FromFields = append(foreign.FromFields, field)
 							foreign.ToColumns = append(foreign.ToColumns, "f_"+strings.TrimSpace(inflections.Underscore(strs[0])))
@@ -160,6 +166,19 @@ func Load(tree *parse.Node) *Table {
 	}
 
 	return table
+}
+
+func splitIndexString(indexString string)(indexSet[]string, notEmpty bool){
+	strs := strings.Split(strings.TrimSpace(indexString), ";")
+	n:=len(strs)
+	for i:=0;i<n;i++{
+		str := strings.TrimSpace(strs[i])
+		if len(str)>0{
+			indexSet = append(indexSet, str)
+		}
+	}
+	notEmpty = len(indexSet)>0
+	return indexSet, notEmpty
 }
 
 // convert Go types to SQL types.

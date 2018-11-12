@@ -56,5 +56,5 @@ func (b *mysql) Index(table *Table, index *Index) string {
 	if index.Unique {
 		obj = "UNIQUE INDEX"
 	}
-	return fmt.Sprintf("CREATE %s %s ON %s (%s);", obj, index.Name, table.Name, b.columns(index.Fields, true, false, false))
+	return fmt.Sprintf("CREATE %s %s ON %s (%s);", obj, index.Name, table.Name, b.columns(nil, index.Fields, true, false, false))
 }

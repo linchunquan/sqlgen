@@ -25,7 +25,7 @@ func (b *base) Table(t *Table) string {
 	// use a tab writer to evenly space the column
 	// names and column types.
 	var tab = tabwriter.NewWriter(buf, 0, 8, 1, ' ', 0)
-	b.columnw(tab, t.Fields, false, false, true)
+	b.columnw(tab, t, t.Fields, false, false, true)
 
 	// flush the tab writer to write to the buffer
 	tab.Flush()
@@ -40,7 +40,7 @@ func (b *base) Index(table *Table, index *Index) string {
 	if index.Unique {
 		obj = "UNIQUE INDEX"
 	}
-	return fmt.Sprintf("CREATE %s IF NOT EXISTS %s ON %s (%s)", obj, index.Name, table.Name, b.columns(index.Fields, true, false, false))
+	return fmt.Sprintf("CREATE %s IF NOT EXISTS %s ON %s (%s)", obj, index.Name, table.Name, b.columns(nil, index.Fields, true, false, false))
 }
 
 // Foreign returns a SQL statement to add foreign key.
@@ -64,11 +64,11 @@ func (b *base) Insert(t *Table) string {
 		}
 	}
 
-	return fmt.Sprintf("INSERT INTO %s (%s\n) VALUES (%s)", t.Name, b.columns(fields, false, false, false), strings.Join(params, ","))
+	return fmt.Sprintf("INSERT INTO %s (%s\n) VALUES (%s)", t.Name, b.columns(nil, fields, false, false, false), strings.Join(params, ","))
 }
 
 func (b *base) Update(t *Table, fields []*Field) string {
-	return fmt.Sprintf("UPDATE %s SET %s %s", t.Name, b.columns(t.Fields, false, true, false), b.clause(fields, len(t.Fields)))
+	return fmt.Sprintf("UPDATE %s SET %s %s", t.Name, b.columns(nil, t.Fields, false, true, false), b.clause(fields, len(t.Fields)))
 }
 
 func (b *base) Delete(t *Table, fields []*Field) string {
@@ -76,11 +76,11 @@ func (b *base) Delete(t *Table, fields []*Field) string {
 }
 
 func (b *base) Select(t *Table, fields []*Field) string {
-	return fmt.Sprintf("SELECT %s\nFROM %s %s", b.columns(t.Fields, false, false, false), t.Name, b.clause(fields, 0))
+	return fmt.Sprintf("SELECT %s\nFROM %s %s", b.columns(t, t.Fields, false, false, false), t.Name, b.clause(fields, 0))
 }
 
 func (b *base) SelectRange(t *Table, fields []*Field) string {
-	return fmt.Sprintf("SELECT %s\nFROM %s %s\nLIMIT %s OFFSET %s", b.columns(t.Fields, false, false, false), t.Name, b.clause(fields, 0), b.Dialect.Param(len(fields)), b.Dialect.Param(len(fields)+1))
+	return fmt.Sprintf("SELECT %s\nFROM %s %s\nLIMIT %s OFFSET %s", b.columns(t, t.Fields, false, false, false), t.Name, b.clause(fields, 0), b.Dialect.Param(len(fields)), b.Dialect.Param(len(fields)+1))
 }
 
 func (b *base) SelectCount(t *Table, fields []*Field) string {
@@ -132,14 +132,14 @@ func (b *base) Token(v int) (_ string) {
 // can optionally generate in inline list of columns,
 // include an assignment operator, and include column
 // definitions.
-func (b *base) columns(fields []*Field, inline, assign, def bool) string {
+func (b *base) columns(table *Table, fields []*Field, inline, assign, def bool) string {
 	var buf bytes.Buffer
-	b.columnw(&buf, fields, inline, assign, def)
+	b.columnw(&buf, table, fields, inline, assign, def)
 	return buf.String()
 }
 
 // helper function to write a block of columns to w.
-func (b *base) columnw(w io.Writer, fields []*Field, inline, assign, def bool) {
+func (b *base) columnw(w io.Writer, table *Table, fields []*Field, inline, assign, def bool) {
 
 	for i, field := range fields {
 		if !inline {
@@ -152,7 +152,12 @@ func (b *base) columnw(w io.Writer, fields []*Field, inline, assign, def bool) {
 		case i != 0:
 			io.WriteString(w, ",")
 		}
-		io.WriteString(w, field.Name)
+		if table!=nil{
+			io.WriteString(w, table.Name+"."+field.Name)
+		}else{
+			io.WriteString(w, field.Name)
+		}
+
 
 		if assign {
 			io.WriteString(w, "=")
