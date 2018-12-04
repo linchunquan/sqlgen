@@ -22,7 +22,7 @@ func isPathExist(_path string) bool {
 }
 // writeSchema writes SQL statements to CREATE, INSERT,
 // UPDATE and DELETE values from Table t.
-func writeSchema(w io.Writer, d schema.Dialect, t *schema.Table, outputSqlFilePath string) {
+func writeSchema(w io.Writer, d schema.Dialect, t *schema.Table, outputSqlFilePath string, view bool) {
 
 	var outputSql = len(outputSqlFilePath) > 0
 	var err error
@@ -41,15 +41,18 @@ func writeSchema(w io.Writer, d schema.Dialect, t *schema.Table, outputSqlFilePa
 		}
 	}
 
-	writeConst(sqlFileContent, w,
-		d.Table(t),
-		"create", inflect.Singularize(t.Name), "stmt",
-	)
+	if !view{
+		writeConst(sqlFileContent, w,
+			d.Table(t),
+			"create", inflect.Singularize(t.Name), "stmt",
+		)
 
-	writeConst(nil, w,
-		d.Insert(t),
-		"insert", inflect.Singularize(t.Name), "stmt",
-	)
+		writeConst(nil, w,
+			d.Insert(t),
+			"insert", inflect.Singularize(t.Name), "stmt",
+		)
+	}
+
 
 	writeConst(nil, w,
 		d.Select(t, nil),
@@ -71,21 +74,24 @@ func writeSchema(w io.Writer, d schema.Dialect, t *schema.Table, outputSqlFilePa
 			d.Select(t, t.Primary), "select", inflect.Singularize(t.Name), "by", joinField(t.Primary, "And"), "stmt",
 		)
 
-		writeConst(nil, w,
-			d.Update(t, t.Primary), "update", inflect.Singularize(t.Name), "by", joinField(t.Primary, "And"), "stmt",
-		)
-
-		writeConst(nil, w,
-			d.Delete(t, t.Primary), "delete", inflect.Singularize(t.Name), "by", joinField(t.Primary, "And"), "stmt",
-		)
+		if !view{
+			writeConst(nil, w,
+				d.Update(t, t.Primary), "update", inflect.Singularize(t.Name), "by", joinField(t.Primary, "And"), "stmt",
+			)
+			writeConst(nil, w,
+				d.Delete(t, t.Primary), "delete", inflect.Singularize(t.Name), "by", joinField(t.Primary, "And"), "stmt",
+			)
+		}
 	}
 
 	for _, ix := range t.Index {
 
-		writeConst(sqlFileContent, w,
-			d.Index(t, ix),
-			"create", ix.Name, "stmt",
-		)
+		if !view {
+			writeConst(sqlFileContent, w,
+				d.Index(t, ix),
+				"create", ix.Name, "stmt",
+			)
+		}
 
 		writeConst(nil, w,
 			d.Select(t, ix.Fields),
@@ -103,22 +109,26 @@ func writeSchema(w io.Writer, d schema.Dialect, t *schema.Table, outputSqlFilePa
 				"select", inflect.Singularize(t.Name), "range", "by", joinField(ix.Fields, "And"), "stmt",
 			)
 		} else {
-			writeConst(nil, w,
-				d.Update(t, ix.Fields),
-				"update", inflect.Singularize(t.Name), "by", joinField(ix.Fields, "And"), "stmt",
-			)
-			writeConst(nil, w,
-				d.Delete(t, ix.Fields),
-				"delete", inflect.Singularize(t.Name), "by", joinField(ix.Fields, "And"), "stmt",
-			)
+			if !view{
+				writeConst(nil, w,
+					d.Update(t, ix.Fields),
+					"update", inflect.Singularize(t.Name), "by", joinField(ix.Fields, "And"), "stmt",
+				)
+				writeConst(nil, w,
+					d.Delete(t, ix.Fields),
+					"delete", inflect.Singularize(t.Name), "by", joinField(ix.Fields, "And"), "stmt",
+				)
+			}
 		}
 	}
 
 	for _, fk := range t.Foreigns{
-		writeConst(sqlFileContent, w,
-			d.Foreign(t, fk),
-			"create", inflect.Singularize(fk.Name), "stmt",
-		)
+		if !view {
+			writeConst(sqlFileContent, w,
+				d.Foreign(t, fk),
+				"create", inflect.Singularize(fk.Name), "stmt",
+			)
+		}
 
 		writeConst(nil, w,
 			d.Select(t, fk.FromFields),

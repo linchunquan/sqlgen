@@ -24,6 +24,7 @@ var (
 	genFuncs   = flag.Bool("funcs", true, "generate sql helper functions")
 	extraFuncs = flag.Bool("extras", true, "generate extra sql helper functions")
 	needImport = flag.Bool( "needImport", true, "need to generate import statement")
+	view       = flag.Bool("view", false, "is view, not table")
 )
 
 func init() {
@@ -63,7 +64,7 @@ func main() {
 
 	// write the sql functions
 	if *genSchema {
-		writeSchema(&buf, dialect, table, *outputSql)
+		writeSchema(&buf, dialect, table, *outputSql, *view)
 	}
 
 	if *genFuncs {
@@ -77,9 +78,11 @@ func main() {
 			writeGenericSelectRows(srcPkgNameInShort, &buf, tree)
 			//writeGenericInsertFunc(srcPkgNameInShort, &buf, tree)
 			//writeGenericUpdateFunc(srcPkgNameInShort, &buf, tree)
-			writeInsertFunc(srcPkgNameInShort, &buf, tree, table)
-			writeDeleteFunc(srcPkgNameInShort, &buf, tree, table)
-			writeUpdateFunc(srcPkgNameInShort, &buf, tree, table)
+			if !*view {
+				writeInsertFunc(srcPkgNameInShort, &buf, tree, table)
+				writeDeleteFunc(srcPkgNameInShort, &buf, tree, table)
+				writeUpdateFunc(srcPkgNameInShort, &buf, tree, table)
+			}
 			writeGetByFunc(srcPkgNameInShort, &buf, tree, table)
 			writeFindAllFunc(srcPkgNameInShort, &buf, tree, table)
 			writeFindAllInRangeFunc(srcPkgNameInShort, &buf, tree, table)

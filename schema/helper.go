@@ -86,7 +86,8 @@ func Load(tree *parse.Node) *Table {
 				indexSet, notEmpty := splitIndexString(node.Tags.Index)
 				if notEmpty{
 					for i, _ := range indexSet{
-						indexName:=indexSet[i]
+						idxInfo:=indexSet[i]
+						indexName:=idxInfo.name
 						index, ok := indexs[indexName]
 						if !ok {
 							index = new(Index)
@@ -94,7 +95,10 @@ func Load(tree *parse.Node) *Table {
 							indexs[index.Name] = index
 							table.Index = append(table.Index, index)
 						}
-						index.Fields = append(index.Fields, field)
+						idxField := field.Clone()
+						idxField.Operator = idxInfo.operator
+						idxField.ValueAsFirstArg = idxInfo.valueAsFirstArg
+						index.Fields = append(index.Fields, idxField)
 					}
 				}
 			}
@@ -103,7 +107,8 @@ func Load(tree *parse.Node) *Table {
 				indexSet, notEmpty := splitIndexString(node.Tags.Unique)
 				if notEmpty{
 					for i, _ := range indexSet{
-						indexName:=indexSet[i]
+						idxInfo:=indexSet[i]
+						indexName:=idxInfo.name
 						index, ok := indexs[indexName]
 						if !ok {
 							index = new(Index)
@@ -113,7 +118,10 @@ func Load(tree *parse.Node) *Table {
 							table.Index = append(table.Index, index)
 						}
 						index.Unique = true
-						index.Fields = append(index.Fields, field)
+						idxField := field.Clone()
+						idxField.Operator = idxInfo.operator
+						idxField.ValueAsFirstArg = idxInfo.valueAsFirstArg
+						index.Fields = append(index.Fields, idxField)
 					}
 				}
 			}
@@ -168,13 +176,32 @@ func Load(tree *parse.Node) *Table {
 	return table
 }
 
-func splitIndexString(indexString string)(indexSet[]string, notEmpty bool){
+type indexInfo struct{
+	name string
+	operator string
+	valueAsFirstArg bool
+}
+
+func splitIndexString(indexString string)(indexSet[]*indexInfo, notEmpty bool){
 	strs := strings.Split(strings.TrimSpace(indexString), ";")
 	n:=len(strs)
 	for i:=0;i<n;i++{
-		str := strings.TrimSpace(strs[i])
+		str := strings.TrimSpace(strings.Replace(strs[i]," ","", -1))
 		if len(str)>0{
-			indexSet = append(indexSet, str)
+			strs2 := strings.Split(str, "@")
+			name := strs2[0]
+			if len(name)>0{
+				idx := &indexInfo{name:name}
+				if len(strs2)>1{
+					idx.operator=strings.TrimSpace(strs2[1])
+				}
+				if len(strs2)>2{
+					if strings.EqualFold("TRUE", strings.ToUpper(strs2[2])){
+						idx.valueAsFirstArg = true
+					}
+				}
+				indexSet = append(indexSet, idx)
+			}
 		}
 	}
 	notEmpty = len(indexSet)>0

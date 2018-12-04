@@ -34,6 +34,12 @@ type Field struct {
 	Primary bool
 	Auto    bool
 	Size    int
+	Operator string
+	ValueAsFirstArg bool
+}
+
+func(f*Field)Clone()*Field{
+	return &Field{Node:f.Node, Name:f.Name, Type:f.Type, Primary:f.Primary, Auto:f.Auto, Size:f.Size, Operator:f.Operator, ValueAsFirstArg:f.ValueAsFirstArg}
 }
 
 type Index struct {

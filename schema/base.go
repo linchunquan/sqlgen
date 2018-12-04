@@ -199,9 +199,28 @@ func (b *base) clause(fields []*Field, pos int) string {
 		}
 
 		buf.WriteString(" ")
-		buf.WriteString(field.Name)
-		buf.WriteString("=")
-		buf.WriteString(b.Dialect.Param(i + pos))
+		if len(field.Operator)==0||strings.EqualFold("=",field.Operator){
+			buf.WriteString(field.Name)
+			buf.WriteString("=")
+			buf.WriteString(b.Dialect.Param(i + pos))
+		}else if strings.EqualFold(strings.ToUpper(field.Operator), "LIKE"){
+			buf.WriteString(field.Name)
+			buf.WriteString(" LIKE ")
+			buf.WriteString(b.Dialect.Param(i + pos))
+		}else{
+			buf.WriteString(field.Operator)
+			buf.WriteString("(")
+			if field.ValueAsFirstArg{
+				buf.WriteString(b.Dialect.Param(i + pos))
+				buf.WriteString(",")
+				buf.WriteString(field.Name)
+			}else{
+				buf.WriteString(field.Name)
+				buf.WriteString(",")
+				buf.WriteString(b.Dialect.Param(i + pos))
+			}
+			buf.WriteString(")")
+		}
 
 		i++
 	}
