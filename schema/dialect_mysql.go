@@ -21,6 +21,10 @@ func (d *mysql) Column(f *Field) (_ string) {
 		return "INTEGER"
 	case LONG:
 		return "BIGINT"
+	case FLOAT:
+		return "FLOAT"
+	case DOUBLE:
+		return "DOUBLE"
 	case BOOLEAN:
 		return "BOOLEAN"
 	case BLOB:

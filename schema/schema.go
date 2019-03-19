@@ -11,6 +11,8 @@ const (
 	BOOLEAN
 	REAL
 	BLOB
+	FLOAT
+	DOUBLE
 )
 
 // List of vendor-specific keywords
