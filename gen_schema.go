@@ -114,12 +114,17 @@ func writeSchema(w io.Writer, d schema.Dialect, t *schema.Table, outputSqlFilePa
 					d.Update(t, ix.Fields),
 					"update", inflect.Singularize(t.Name), "by", joinField(ix.Fields, "And"), "stmt",
 				)
-				writeConst(nil, w,
+				/*writeConst(nil, w,
 					d.Delete(t, ix.Fields),
 					"delete", inflect.Singularize(t.Name), "by", joinField(ix.Fields, "And"), "stmt",
-				)
+				)*/
 			}
 		}
+
+		writeConst(nil, w,
+			d.Delete(t, ix.Fields),
+			"delete", inflect.Singularize(t.Name), "by", joinField(ix.Fields, "And"), "stmt",
+		)
 	}
 
 	for _, fk := range t.Foreigns{
