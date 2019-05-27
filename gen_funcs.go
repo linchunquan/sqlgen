@@ -265,14 +265,14 @@ func writeDeleteFunc(srcPkgNameInShort string, w io.Writer,  tree *parse.Node, t
 	}
 	if len(t.Index) !=0 {
 		for _, ix := range t.Index {
-			if ix.Unique {
+			//if ix.Unique {
 				fmt.Fprintf(w, sDelete,
 					tree.Type,
 					getLabelName("by", joinField(ix.Fields, "And")),
 					joinObjectFieldInDetails(ix.Fields, ",", true),
 					joinObjectFieldInDetails(ix.Fields, ",", false),
 					getLabelName("delete", inflect.Singularize(t.Name), "by", joinField(ix.Fields, "And"), "stmt"))
-			}
+			//}
 		}
 	}
 }
