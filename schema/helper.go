@@ -68,7 +68,8 @@ func Load(tree *parse.Node) *Table {
 			}
 
 			if node.Tags.TableName != "" {
-				table.Name = node.Tags.Name
+				log.Printf("set table name as %s \n", node.Tags.TableName)
+				table.Name = node.Tags.TableName
 			}
 
 			// default ID and int64 to primary key
