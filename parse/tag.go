@@ -28,6 +28,9 @@ type Tag struct {
 	Foreign string `yaml:"fk"`
 	Many    bool   `yaml:"many"`
 	ForeignGroup string `yaml:"fkGroup"`
+
+	// customize the table name
+	TableName string `yaml:"tableName"`
 }
 
 // parseTag parses a tag string from the struct

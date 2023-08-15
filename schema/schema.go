@@ -13,6 +13,7 @@ const (
 	BLOB
 	FLOAT
 	DOUBLE
+	MEDIUMTEXT
 )
 
 // List of vendor-specific keywords

@@ -1,11 +1,11 @@
 package schema
 
 import (
+	"log"
 	"strings"
 
 	"github.com/acsellers/inflections"
 	"github.com/linchunquan/sqlgen/parse"
-	"log"
 )
 
 func Load(tree *parse.Node) *Table {
@@ -65,6 +65,10 @@ func Load(tree *parse.Node) *Table {
 
 			if node.Tags.Skip {
 				continue
+			}
+
+			if node.Tags.TableName != "" {
+				table.Name = node.Tags.Name
 			}
 
 			// default ID and int64 to primary key
@@ -244,4 +248,5 @@ var sqlTypes = map[string]int{
 	"bytea":    BLOB,
 	"double":   DOUBLE,
 	"float":    FLOAT,
+	"MEDIUMTEXT": MEDIUMTEXT,
 }
