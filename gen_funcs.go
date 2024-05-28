@@ -6,10 +6,10 @@ import (
 	"io"
 	"strings"
 
-	"github.com/acsellers/inflections"
-	"github.com/linchunquan/sqlgen/schema"
-	"github.com/linchunquan/sqlgen/parse"
 	"bitbucket.org/pkg/inflect"
+	"github.com/acsellers/inflections"
+	"github.com/linchunquan/sqlgen/parse"
+	"github.com/linchunquan/sqlgen/schema"
 )
 
 func writeImports(w io.Writer, tree *parse.Node, pkgs ...string) {
@@ -124,6 +124,42 @@ func writeSliceFunc(srcPkgNameInShort string, w io.Writer, tree *parse.Node) {
 	)
 }
 
+func getAssignmentCode(buf *bytes.Buffer, node *parse.Node, i int, attr string) {
+	tmp := `
+    if v%d.Valid{
+        v.%s=v%d.%s
+    }else{
+        v.%s=%s
+    }
+`
+	if node.Type == "int" {
+		tmp = `
+    if v%d.Valid{
+        v.%s=int(v%d.%s64)
+    }else{
+        v.%s=%s
+    }
+`
+	}
+
+	defautlVal := `""`
+	if strings.Contains(node.Type, "bool") {
+		defautlVal = "false"
+	} else if strings.Contains(node.Type, "float") {
+		defautlVal = "0"
+	} else if strings.Contains(node.Type, "int") {
+		defautlVal = "0"
+	}
+
+	fmt.Fprintf(buf, tmp, i, attr, i, strings.Title(node.Type), attr, defautlVal)
+}
+
+func getSqlNullType(node *parse.Node) string{
+	if node.Type == "int" {
+		return "sql.NullInt64"
+	}
+	return "sql.Null"+strings.Title(node.Type)
+}
 func writeRowFunc(srcPkgNameInShort string, w io.Writer, tree *parse.Node) {
 
 	var buf1, buf2, buf3 bytes.Buffer
@@ -140,7 +176,7 @@ func writeRowFunc(srcPkgNameInShort string, w io.Writer, tree *parse.Node) {
 		case parse.Map, parse.Slice:
 			fmt.Fprintf(&buf1, "var v%d %s\n", i, "[]byte")
 		default:
-			fmt.Fprintf(&buf1, "var v%d %s\n", i, node.Type)
+			fmt.Fprintf(&buf1, "var v%d %s\n", i, getSqlNullType(node))
 		}
 
 		// variable scanning
@@ -159,7 +195,8 @@ func writeRowFunc(srcPkgNameInShort string, w io.Writer, tree *parse.Node) {
 		case parse.Map, parse.Slice, parse.Struct, parse.Ptr:
 			fmt.Fprintf(&buf3, "json.Unmarshal(v%d, &v.%s)\n", i, join(path, "."))
 		default:
-			fmt.Fprintf(&buf3, "v.%s=v%d\n", join(path, "."), i)
+			//fmt.Fprintf(&buf3, "v.%s=v%d\n", join(path, "."), i)
+			getAssignmentCode(&buf3, node, i, join(path, "."))
 		}
 
 		parent = node.Parent
@@ -193,7 +230,7 @@ func writeRowsFunc(srcPkgNameInShort string, w io.Writer, tree *parse.Node) {
 		case parse.Map, parse.Slice:
 			fmt.Fprintf(&buf1, "var v%d %s\n", i, "[]byte")
 		default:
-			fmt.Fprintf(&buf1, "var v%d %s\n", i, node.Type)
+			fmt.Fprintf(&buf1, "var v%d %s\n", i, getSqlNullType(node))
 		}
 
 		// variable scanning
@@ -212,7 +249,8 @@ func writeRowsFunc(srcPkgNameInShort string, w io.Writer, tree *parse.Node) {
 		case parse.Map, parse.Slice, parse.Struct, parse.Ptr:
 			fmt.Fprintf(&buf3, "json.Unmarshal(v%d, &v.%s)\n", i, join(path, "."))
 		default:
-			fmt.Fprintf(&buf3, "v.%s=v%d\n", join(path, "."), i)
+			//fmt.Fprintf(&buf3, "v.%s=v%d\n", join(path, "."), i)
+			getAssignmentCode(&buf3, node, i, join(path, "."))
 		}
 
 		parent = node.Parent

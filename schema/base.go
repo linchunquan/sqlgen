@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"log"
 	"strings"
 	"text/tabwriter"
-	"log"
 )
 
 type base struct {
@@ -153,7 +153,9 @@ func (b *base) columnw(w io.Writer, table *Table, fields []*Field, inline, assig
 			io.WriteString(w, ",")
 		}
 		if table!=nil{
-			io.WriteString(w, table.Name+"."+field.Name)
+			//io.WriteString(w, table.Name+"."+field.Name)
+			// 带 table.Name+"." 之后，在信创数据库无法识别
+			io.WriteString(w, field.Name)
 		}else{
 			io.WriteString(w, field.Name)
 		}
