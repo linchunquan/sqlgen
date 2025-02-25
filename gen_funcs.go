@@ -142,6 +142,7 @@ func getAssignmentCode(buf *bytes.Buffer, node *parse.Node, i int, attr string) 
 `
 	}
 
+	value := strings.Title(node.Type)
 	defautlVal := `""`
 	if strings.Contains(node.Type, "bool") {
 		defautlVal = "false"
@@ -149,14 +150,19 @@ func getAssignmentCode(buf *bytes.Buffer, node *parse.Node, i int, attr string) 
 		defautlVal = "0"
 	} else if strings.Contains(node.Type, "int") {
 		defautlVal = "0"
+	} else if strings.Contains(node.Type, "[]byte") {
+		defautlVal = "nil"
+		value = "Bytes"
 	}
 
-	fmt.Fprintf(buf, tmp, i, attr, i, strings.Title(node.Type), attr, defautlVal)
+	fmt.Fprintf(buf, tmp, i, attr, i, value, attr, defautlVal)
 }
 
 func getSqlNullType(node *parse.Node) string{
 	if node.Type == "int" {
 		return "sql.NullInt64"
+	} else if node.Type == "[]byte" {
+		return "db.NullBytes"
 	}
 	return "sql.Null"+strings.Title(node.Type)
 }
