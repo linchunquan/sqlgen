@@ -1,8 +1,9 @@
 package schema
 
-import(
+import (
 	"github.com/linchunquan/sqlgen/parse"
 )
+
 // List of basic types
 const (
 	INTEGER int = iota
@@ -14,6 +15,7 @@ const (
 	FLOAT
 	DOUBLE
 	MEDIUMTEXT
+	LONGTEXT
 )
 
 // List of vendor-specific keywords

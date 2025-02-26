@@ -32,6 +32,8 @@ func (d *mysql) Column(f *Field) (_ string) {
 		return "MEDIUMBLOB"
 	case MEDIUMTEXT:
 		return "MEDIUMTEXT"
+	case LONGTEXT:
+		return "LONGTEXT"
 	case VARCHAR:
 		// assigns an arbitrary size if
 		// none is provided.

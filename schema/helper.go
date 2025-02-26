@@ -250,4 +250,5 @@ var sqlTypes = map[string]int{
 	"double":   DOUBLE,
 	"float":    FLOAT,
 	"MEDIUMTEXT": MEDIUMTEXT,
+	"LONGTEXT": LONGTEXT,
 }
